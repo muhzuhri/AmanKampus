@@ -1,8 +1,16 @@
+'use client';
+
 import React from 'react';
 import { Shield, Activity, FileText, Code, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
   return (
     <footer className="border-t border-slate-200 bg-white pt-16 pb-10 relative z-10 w-full">
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-16 mb-12">

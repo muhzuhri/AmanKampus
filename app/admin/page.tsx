@@ -34,6 +34,7 @@ import {
   Copy,
   FileSearch,
   Download,
+  ArrowLeft,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -101,6 +102,8 @@ const STATUS_ICONS: Record<CaseStatus, React.ReactNode> = {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [chatInput, setChatInput] = useState('');
@@ -113,6 +116,8 @@ export default function AdminDashboard() {
       router.replace('/admin/login');
       return;
     }
+    setIsAuthenticated(true);
+    setIsAuthChecked(true);
     loadReports();
 
     const onStorage = (e: StorageEvent) => {
@@ -147,8 +152,15 @@ export default function AdminDashboard() {
     }
   };
 
+  const resetMockReports = () => {
+    localStorage.setItem('aman_kampus_reports', JSON.stringify(MOCK_REPORTS));
+    setReports(MOCK_REPORTS);
+    setSelectedReport(null);
+  };
+
   const handleLogout = () => {
     sessionStorage.removeItem('isAdminLoggedIn');
+    setIsAuthenticated(false);
     router.push('/admin/login');
   };
 
@@ -338,6 +350,15 @@ export default function AdminDashboard() {
   };
 
   // ═══════════════════════════════════════════════════════════════════════
+  if (!isAuthChecked || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 text-slate-400">
+        <div className="w-9 h-9 border-3 border-teal-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs font-semibold tracking-wide text-slate-400">Memeriksa Hak Akses Admin...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-transparent text-slate-900 dark:text-slate-100 font-sans selection:bg-teal-500/20">
 
@@ -363,6 +384,14 @@ export default function AdminDashboard() {
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Live Server</span>
             </div>
+            <button
+              onClick={resetMockReports}
+              className="hidden md:flex items-center gap-1.5 text-xs font-semibold bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/80 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+              title="Reset ke data contoh laporan demo"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Reset Contoh Laporan</span>
+            </button>
             <button
               onClick={loadReports}
               className="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
@@ -412,12 +441,26 @@ export default function AdminDashboard() {
                     <p className="text-xs font-mono text-slate-500 dark:text-slate-400">{selectedReport.anonymousToken}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setSelectedReport(null)}
-                  className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedReport(null);
+                      const el = document.getElementById('reports-table');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-slate-200/70 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 rounded-xl transition-all shadow-xs cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    <span>Kembali ke Daftar Laporan</span>
+                  </button>
+                  <button
+                    onClick={() => setSelectedReport(null)}
+                    className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                    title="Tutup detail"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div className="p-6 space-y-6">
@@ -723,7 +766,7 @@ export default function AdminDashboard() {
         </AnimatePresence>
 
         {/* ── REPORTS TABLE ──────────────────────────────────────────────── */}
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-lg">
+        <div id="reports-table" className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-lg scroll-mt-24">
           <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/80 dark:bg-slate-950/80">
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white">
@@ -736,9 +779,16 @@ export default function AdminDashboard() {
           </div>
 
           {reports.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <Inbox className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-4" />
-              <p className="text-slate-500 dark:text-slate-400 font-medium">Belum ada laporan masuk</p>
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-3">
+              <Inbox className="w-12 h-12 text-slate-300 dark:text-slate-700" />
+              <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">Belum ada laporan masuk</p>
+              <button
+                onClick={resetMockReports}
+                className="mt-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-xs cursor-pointer flex items-center gap-2"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Muat Contoh Laporan Demo
+              </button>
             </div>
           ) : (
             <div className="overflow-x-auto">

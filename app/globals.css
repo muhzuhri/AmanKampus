@@ -45,11 +45,11 @@
 
 /* Light mode gentle contrast adjustments for small text */
 html:not(.dark) .text-slate-400 {
-  color: #64748b; /* slate-500 */
+  color: #bdbdbd; /* slate-500 */
 }
 
 html:not(.dark) .text-slate-500 {
-  color: #475569; /* slate-600 */
+  color: #bdbdbd; /* slate-600 */
 }
 
 html:not(.dark) .text-slate-600 {
