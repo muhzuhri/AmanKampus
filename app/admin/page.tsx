@@ -3,8 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import {
   ShieldAlert,
+  Sun,
+  Moon,
   FileText,
   CheckCircle,
   Clock,
@@ -21,8 +24,6 @@ import {
   Inbox,
   RefreshCw,
   ShieldCheck,
-  Cpu,
-  Camera,
   MessageSquare,
   Send,
   History,
@@ -102,6 +103,8 @@ const STATUS_ICONS: Record<CaseStatus, React.ReactNode> = {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
@@ -112,6 +115,7 @@ export default function AdminDashboard() {
 
   // ── Auth + data load ────────────────────────────────────────────────────
   useEffect(() => {
+    setMounted(true);
     if (sessionStorage.getItem('isAdminLoggedIn') !== 'true') {
       router.replace('/admin/login');
       return;
@@ -349,44 +353,46 @@ export default function AdminDashboard() {
     localStorage.setItem('aman_kampus_reports', JSON.stringify(updated));
   };
 
+  const isDark = resolvedTheme === 'dark';
+
   // ═══════════════════════════════════════════════════════════════════════
   if (!isAuthChecked || !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 text-slate-400">
-        <div className="w-9 h-9 border-3 border-teal-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs font-semibold tracking-wide text-slate-400">Memeriksa Hak Akses Admin...</p>
+      <div className="min-h-screen bg-transparent flex flex-col items-center justify-center gap-4 text-stone-500 dark:text-stone-400">
+        <div className="w-9 h-9 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs font-semibold tracking-wide">Memeriksa Hak Akses Admin...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-900 dark:text-slate-100 font-sans selection:bg-teal-500/20">
+    <div className="min-h-screen bg-transparent text-stone-900 dark:text-stone-100 font-sans selection:bg-teal-500/20">
 
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+      <header className="sticky top-0 z-40 bg-stone-900/90 dark:bg-[#1a3330] backdrop-blur-md border-b border-stone-800 dark:border-teal-900 shadow-md text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between py-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="p-2 -ml-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-500 hover:text-slate-900 dark:hover:text-white">
-              <ShieldAlert className="w-5 h-5" />
+            <Link href="/" className="p-2 -ml-1 rounded-lg hover:bg-stone-800 dark:hover:bg-stone-800 transition-colors text-stone-300 hover:text-white">
+              <ShieldAlert className="w-5 h-5 text-teal-400" />
             </Link>
             <div>
-              <h1 className="font-bold tracking-tight text-slate-900 dark:text-white text-sm sm:text-base">
+              <h1 className="font-bold tracking-tight text-white dark:text-white text-sm sm:text-base">
                 Dasbor Satgas PPKS
               </h1>
-              <p className="text-xs text-teal-600 dark:text-teal-400 font-medium hidden sm:block">
+              <p className="text-xs text-teal-400 dark:text-teal-400 font-medium hidden sm:block">
                 Portal Internal Verifikasi Laporan & Forensik Bukti
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-lg">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Live Server</span>
+            <div className="hidden sm:flex items-center gap-2 bg-emerald-950/60 dark:bg-emerald-950/60 border border-emerald-800 dark:border-emerald-800 px-3 py-1.5 rounded-lg">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-semibold text-emerald-300 dark:text-emerald-300">Live Server</span>
             </div>
             <button
               onClick={resetMockReports}
-              className="hidden md:flex items-center gap-1.5 text-xs font-semibold bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/80 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+              className="hidden md:flex items-center gap-1.5 text-xs font-semibold bg-teal-950/60 dark:bg-teal-950/60 border border-teal-800 dark:border-teal-800 text-teal-300 dark:text-teal-300 hover:bg-teal-900/80 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
               title="Reset ke data contoh laporan demo"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -394,14 +400,24 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={loadReports}
-              className="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              className="p-2 text-stone-300 hover:text-white hover:bg-stone-800 dark:hover:bg-stone-800 rounded-lg transition-colors cursor-pointer"
               title="Muat ulang laporan"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
+            {mounted && (
+              <button
+                type="button"
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                className="p-2 rounded-lg border border-stone-700 dark:border-stone-600 bg-stone-800 hover:bg-stone-700 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-200 transition-colors cursor-pointer"
+                aria-label="Toggle theme"
+              >
+                {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-amber-200" />}
+              </button>
+            )}
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-900 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-xs cursor-pointer"
+              className="flex items-center gap-2 text-sm bg-stone-800 dark:bg-stone-800 border border-stone-700 dark:border-stone-700 text-stone-200 hover:text-rose-400 hover:border-rose-800 hover:bg-rose-950/50 font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-xs cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Keluar</span>
@@ -428,17 +444,17 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.3 }}
-              className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl"
+              className="bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl border border-stone-200 dark:border-stone-800 rounded-3xl overflow-hidden shadow-xl"
             >
               {/* Panel header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100 dark:border-stone-800 bg-stone-50/80 dark:bg-stone-950/80">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 rounded-xl flex items-center justify-center">
                     <ShieldAlert className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900 dark:text-white text-sm">{selectedReport.caseId}</p>
-                    <p className="text-xs font-mono text-slate-500 dark:text-slate-400">{selectedReport.anonymousToken}</p>
+                    <p className="font-bold text-stone-900 dark:text-white text-sm">{selectedReport.caseId}</p>
+                    <p className="text-xs font-mono text-stone-500 dark:text-stone-400">{selectedReport.anonymousToken}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -448,14 +464,14 @@ export default function AdminDashboard() {
                       const el = document.getElementById('reports-table');
                       if (el) el.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-slate-200/70 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 rounded-xl transition-all shadow-xs cursor-pointer"
+                    className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-stone-200/70 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700/80 text-stone-700 dark:text-stone-200 rounded-xl transition-all shadow-xs cursor-pointer"
                   >
                     <ArrowLeft className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                     <span>Kembali ke Daftar Laporan</span>
                   </button>
                   <button
                     onClick={() => setSelectedReport(null)}
-                    className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                    className="p-2 text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-200 dark:hover:bg-stone-800 rounded-xl transition-colors cursor-pointer"
                     title="Tutup detail"
                   >
                     <X className="w-4 h-4" />
@@ -474,9 +490,22 @@ export default function AdminDashboard() {
                   {selectedReport.targetFaculty && <DetailCell icon={<FileText className="w-3.5 h-3.5" />} label="Lingkup/Fakultas" value={selectedReport.targetFaculty} />}
                 </div>
 
+                {selectedReport.abuseFlags && selectedReport.abuseFlags.length > 0 && (
+                  <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-amber-800 dark:text-amber-200 uppercase tracking-wider flex items-center gap-1.5">
+                      <AlertTriangle className="w-4 h-4" /> Defense-in-Depth — bendera penyalahgunaan
+                    </p>
+                    <ul className="space-y-1">
+                      {selectedReport.abuseFlags.map((flag) => (
+                        <li key={flag} className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">• {flag}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 {/* Status badge */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Status:</span>
+                  <span className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase">Status:</span>
                   <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${STATUS_STYLES[selectedReport.status]}`}>
                     {STATUS_ICONS[selectedReport.status]}
                     {selectedReport.status}
@@ -485,11 +514,11 @@ export default function AdminDashboard() {
 
                 {/* Kronologi */}
                 <div className="space-y-2">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase flex items-center gap-1.5">
+                  <p className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5" /> Kronologi Kejadian
                   </p>
-                  <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
-                    <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{selectedReport.chronology}</p>
+                  <div className="bg-stone-50 dark:bg-stone-950/60 border border-stone-200 dark:border-stone-800 rounded-xl p-4">
+                    <p className="text-sm text-stone-800 dark:text-stone-200 leading-relaxed whitespace-pre-wrap">{selectedReport.chronology}</p>
                   </div>
                 </div>
 
@@ -497,7 +526,7 @@ export default function AdminDashboard() {
                 {selectedReport.evidences && selectedReport.evidences.length > 0 ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase flex items-center gap-1.5">
+                      <p className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase flex items-center gap-1.5">
                         <Paperclip className="w-3.5 h-3.5" /> Verifikasi Keaslian & Forensik Bukti ({selectedReport.evidences.length} file)
                       </p>
                       <span className="text-[11px] text-teal-600 dark:text-teal-400 font-medium">SHA-256 & EXIF Protected</span>
@@ -507,15 +536,15 @@ export default function AdminDashboard() {
                       {selectedReport.evidences.map((ev) => {
                         const verifStatus = ev.verificationStatus || 'Belum Diverifikasi';
                         return (
-                          <div key={ev.evidenceId} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-xs">
-                            <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+                          <div key={ev.evidenceId} className="bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl p-5 space-y-4 shadow-xs">
+                            <div className="flex items-center justify-between gap-3 border-b border-stone-100 dark:border-stone-800/80 pb-3">
                               <div className="flex items-center gap-3 min-w-0">
                                 <div className="w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 flex items-center justify-center shrink-0">
                                   <Paperclip className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="text-sm text-slate-900 dark:text-slate-100 font-semibold truncate">{ev.fileName}</p>
-                                  <p className="text-xs text-slate-500 dark:text-slate-400">{ev.fileType} · {formatBytes(ev.fileSize)}</p>
+                                  <p className="text-sm text-stone-900 dark:text-stone-100 font-semibold truncate">{ev.fileName}</p>
+                                  <p className="text-xs text-stone-500 dark:text-stone-400">{ev.fileType} · {formatBytes(ev.fileSize)}</p>
                                 </div>
                               </div>
 
@@ -535,7 +564,7 @@ export default function AdminDashboard() {
                                 <span className="font-bold text-teal-900 dark:text-teal-300 flex items-center gap-1.5">
                                   <MessageSquare className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" /> Catatan / Alasan Pelapor Mengenai Bukti Ini:
                                 </span>
-                                <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-medium">{ev.reporterNote}</p>
+                                <p className="text-stone-800 dark:text-stone-200 leading-relaxed font-medium">{ev.reporterNote}</p>
                               </div>
                             )}
 
@@ -568,8 +597,8 @@ export default function AdminDashboard() {
 
                             {/* SHA-256 Checksum & EXIF Status */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 space-y-1">
-                                <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 font-semibold text-[11px]">
+                              <div className="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-3 space-y-1">
+                                <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 font-semibold text-[11px]">
                                   <span className="flex items-center gap-1"><Hash className="w-3.5 h-3.5" /> SHA-256 Cryptographic Hash</span>
                                   <button
                                     onClick={() => {
@@ -583,25 +612,25 @@ export default function AdminDashboard() {
                                     {copiedHash === ev.evidenceId ? 'Tersalin' : 'Salin Hash'}
                                   </button>
                                 </div>
-                                <p className="font-mono text-[10px] text-slate-700 dark:text-slate-300 break-all leading-relaxed bg-white dark:bg-slate-950 p-1.5 rounded border border-slate-100 dark:border-slate-800">
+                                <p className="font-mono text-[10px] text-stone-700 dark:text-stone-300 break-all leading-relaxed bg-white dark:bg-stone-950 p-1.5 rounded border border-stone-100 dark:border-stone-800">
                                   {ev.sha256}
                                 </p>
                               </div>
 
-                              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 space-y-1">
-                                <span className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] flex items-center gap-1">
+                              <div className="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-3 space-y-1">
+                                <span className="text-stone-500 dark:text-stone-400 font-semibold text-[11px] flex items-center gap-1">
                                   <ShieldCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" /> Pembersihan EXIF & Privasi
                                 </span>
-                                <p className="text-xs text-slate-700 dark:text-slate-300">
+                                <p className="text-xs text-stone-700 dark:text-stone-300">
                                   {ev.exifStripped ? '✓ Metadata EXIF (GPS lokasi & serial HP) telah dibersihkan demi keamanan pelapor.' : '✓ Format standar tervalidasi.'}
                                 </p>
                               </div>
                             </div>
 
                             {/* Satgas Verification Decision Controls */}
-                            <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
+                            <div className="bg-stone-50/80 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 rounded-xl p-4 space-y-3">
                               <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                <span className="text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider flex items-center gap-1.5">
                                   <FileSearch className="w-4 h-4 text-teal-600 dark:text-teal-400" /> Penilaian Keaslian oleh Satgas:
                                 </span>
                                 <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1 ${
@@ -617,8 +646,8 @@ export default function AdminDashboard() {
                               </div>
 
                               {ev.verificationNote && (
-                                <p className="text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
-                                  <strong className="text-slate-800 dark:text-slate-200">Catatan Satgas:</strong> {ev.verificationNote}
+                                <p className="text-xs text-stone-600 dark:text-stone-400 bg-white dark:bg-stone-950 p-2.5 rounded-lg border border-stone-200 dark:border-stone-800">
+                                  <strong className="text-stone-800 dark:text-stone-200">Catatan Satgas:</strong> {ev.verificationNote}
                                 </p>
                               )}
 
@@ -646,15 +675,15 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase flex items-center gap-1.5 mb-1"><Paperclip className="w-3.5 h-3.5" /> Bukti</p>
-                    <p className="text-sm text-slate-400 italic">Tidak ada bukti yang disertakan.</p>
+                  <div className="bg-stone-50 dark:bg-stone-950/60 border border-stone-200 dark:border-stone-800 rounded-xl p-4">
+                    <p className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase flex items-center gap-1.5 mb-1"><Paperclip className="w-3.5 h-3.5" /> Bukti</p>
+                    <p className="text-sm text-stone-400 italic">Tidak ada bukti yang disertakan.</p>
                   </div>
                 )}
 
                 {/* Ubah status kasus */}
-                <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Ubah Status Kasus</p>
+                <div className="space-y-3 pt-6 border-t border-stone-100 dark:border-stone-800">
+                  <p className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase">Ubah Status Kasus</p>
                   <div className="flex flex-wrap gap-2">
                     {ALL_STATUSES.map((s) => (
                       <button
@@ -663,7 +692,7 @@ export default function AdminDashboard() {
                         className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
                           selectedReport.status === s
                             ? `${STATUS_STYLES[s]} shadow-xs ring-2 ring-offset-1 ring-teal-500/40`
-                            : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                            : 'bg-white dark:bg-stone-950 border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'
                         }`}
                       >
                         {STATUS_ICONS[s]} {s}
@@ -673,26 +702,26 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* ── SATGAS CHAT ─────────────────────────────────── */}
-                <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase flex items-center gap-1.5">
+                <div className="space-y-3 pt-6 border-t border-stone-100 dark:border-stone-800">
+                  <p className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase flex items-center gap-1.5">
                     <MessageSquare className="w-3.5 h-3.5" /> Komunikasi Dua Arah (Chat Anonim)
                   </p>
-                  <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3 max-h-[320px] overflow-y-auto">
+                  <div className="bg-stone-50 dark:bg-stone-950/60 border border-stone-200 dark:border-stone-800 rounded-xl p-4 space-y-3 max-h-[320px] overflow-y-auto">
                     {(!selectedReport.messages || selectedReport.messages.length === 0) ? (
-                      <p className="text-sm text-slate-500 dark:text-slate-400 italic text-center py-4">Belum ada pesan. Kirim pesan pertama kepada pelapor.</p>
+                      <p className="text-sm text-stone-500 dark:text-stone-400 italic text-center py-4">Belum ada pesan. Kirim pesan pertama kepada pelapor.</p>
                     ) : (
                       selectedReport.messages.map((msg) => (
                         <div key={msg.id} className={`flex flex-col ${msg.sender === 'Satgas' ? 'items-end' : 'items-start'} gap-1`}>
-                          <div className="text-[10px] text-slate-400 font-mono font-bold uppercase flex items-center gap-2">
+                          <div className="text-[10px] text-stone-400 font-mono font-bold uppercase flex items-center gap-2">
                             {msg.sender === 'Satgas' && <Shield className="w-3 h-3 text-teal-600 dark:text-teal-400" />}
-                            {msg.sender === 'Pelapor' && <EyeOff className="w-3 h-3 text-slate-400" />}
+                            {msg.sender === 'Pelapor' && <EyeOff className="w-3 h-3 text-stone-400" />}
                             {msg.sender}
                             <span className="opacity-60">{formatDateID(msg.timestamp)}</span>
                           </div>
                           <div className={`p-3 rounded-xl max-w-[85%] text-sm leading-relaxed ${
                             msg.sender === 'Satgas'
                               ? 'bg-teal-600 text-white rounded-tr-xs shadow-xs font-medium'
-                              : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-xs'
+                              : 'bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-800 dark:text-stone-200 rounded-tl-xs'
                           }`}>
                             {msg.text}
                           </div>
@@ -706,7 +735,7 @@ export default function AdminDashboard() {
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       placeholder="Ketik pesan klarifikasi kepada pelapor..."
-                      className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-teal-400 transition-all font-medium"
+                      className="flex-1 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl px-4 py-3 text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:border-teal-400 transition-all font-medium"
                       required
                     />
                     <button
@@ -720,11 +749,11 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* ── AUDIT TRAIL ─────────────────────────────────── */}
-                <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <div className="space-y-3 pt-6 border-t border-stone-100 dark:border-stone-800">
                   <button
                     type="button"
                     onClick={() => setShowAuditTrail(!showAuditTrail)}
-                    className="w-full flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase hover:text-stone-700 dark:hover:text-stone-200 transition-colors cursor-pointer"
                   >
                     <span className="flex items-center gap-1.5"><History className="w-3.5 h-3.5" /> Jejak Audit (Audit Trail)</span>
                     <span className="text-teal-600 dark:text-teal-400">{showAuditTrail ? 'Sembunyikan ▲' : 'Tampilkan ▼'}</span>
@@ -733,25 +762,25 @@ export default function AdminDashboard() {
                   <AnimatePresence>
                     {showAuditTrail && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2 max-h-[300px] overflow-y-auto">
-                          <div className="flex items-start gap-3 text-xs text-slate-500 dark:text-slate-400 py-2 border-b border-slate-200 dark:border-slate-800">
+                        <div className="bg-stone-50 dark:bg-stone-950/60 border border-stone-200 dark:border-stone-800 rounded-xl p-4 space-y-2 max-h-[300px] overflow-y-auto">
+                          <div className="flex items-start gap-3 text-xs text-stone-500 dark:text-stone-400 py-2 border-b border-stone-200 dark:border-stone-800">
                             <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-950 flex items-center justify-center shrink-0 mt-0.5">
                               <Inbox className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                             </div>
                             <div>
-                              <p className="font-medium text-slate-800 dark:text-slate-200">Laporan diterima oleh sistem</p>
-                              <p className="text-slate-500 dark:text-slate-400 font-mono text-[10px]">{formatDateID(selectedReport.receivedAt)} · Aktor: Sistem</p>
+                              <p className="font-medium text-stone-800 dark:text-stone-200">Laporan diterima oleh sistem</p>
+                              <p className="text-stone-500 dark:text-stone-400 font-mono text-[10px]">{formatDateID(selectedReport.receivedAt)} · Aktor: Sistem</p>
                             </div>
                           </div>
 
                           {selectedReport.auditLogs && selectedReport.auditLogs.map((log) => (
-                            <div key={log.id} className="flex items-start gap-3 text-xs text-slate-500 dark:text-slate-400 py-2 border-b border-slate-200 dark:border-slate-800 last:border-0">
+                            <div key={log.id} className="flex items-start gap-3 text-xs text-stone-500 dark:text-stone-400 py-2 border-b border-stone-200 dark:border-stone-800 last:border-0">
                               <div className="w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-950 flex items-center justify-center shrink-0 mt-0.5">
                                 <Shield className="w-3 h-3 text-teal-600 dark:text-teal-400" />
                               </div>
                               <div>
-                                <p className="font-medium text-slate-800 dark:text-slate-200">{log.action}</p>
-                                <p className="text-slate-500 dark:text-slate-400 font-mono text-[10px]">{formatDateID(log.timestamp)} · Aktor: {log.actor}</p>
+                                <p className="font-medium text-stone-800 dark:text-stone-200">{log.action}</p>
+                                <p className="text-stone-500 dark:text-stone-400 font-mono text-[10px]">{formatDateID(log.timestamp)} · Aktor: {log.actor}</p>
                               </div>
                             </div>
                           ))}
@@ -766,13 +795,13 @@ export default function AdminDashboard() {
         </AnimatePresence>
 
         {/* ── REPORTS TABLE ──────────────────────────────────────────────── */}
-        <div id="reports-table" className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-lg scroll-mt-24">
-          <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/80 dark:bg-slate-950/80">
+        <div id="reports-table" className="bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl border border-stone-200 dark:border-stone-800 rounded-3xl overflow-hidden shadow-lg scroll-mt-24">
+          <div className="px-6 py-5 border-b border-stone-100 dark:border-stone-800 flex justify-between items-center bg-stone-50/80 dark:bg-stone-950/80">
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              <h2 className="text-base font-bold text-stone-900 dark:text-white">
                 Daftar Laporan Masuk
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
                 {reports.length} laporan · Semua tersimpan terenkripsi
               </p>
             </div>
@@ -780,8 +809,8 @@ export default function AdminDashboard() {
 
           {reports.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-3">
-              <Inbox className="w-12 h-12 text-slate-300 dark:text-slate-700" />
-              <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">Belum ada laporan masuk</p>
+              <Inbox className="w-12 h-12 text-stone-300 dark:text-stone-700" />
+              <p className="text-stone-500 dark:text-stone-400 font-medium text-sm">Belum ada laporan masuk</p>
               <button
                 onClick={resetMockReports}
                 className="mt-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-xs cursor-pointer flex items-center gap-2"
@@ -792,8 +821,8 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                <thead className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-xs uppercase font-semibold">
+              <table className="w-full text-left text-sm text-stone-600 dark:text-stone-300">
+                <thead className="bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 text-stone-400 dark:text-stone-500 text-xs uppercase font-semibold">
                   <tr>
                     <th className="px-6 py-4 font-semibold">Case ID</th>
                     <th className="px-6 py-4 font-semibold">Token Anonim</th>
@@ -804,19 +833,19 @@ export default function AdminDashboard() {
                     <th className="px-6 py-4 font-semibold text-right">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
                   {reports.map((report, idx) => (
-                    <tr key={report.caseId || `fallback-${idx}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group bg-white dark:bg-slate-900">
-                      <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-xs">{report.caseId}</td>
-                      <td className="px-6 py-4 font-mono text-slate-500 dark:text-slate-400 text-xs">{report.anonymousToken}</td>
-                      <td className="px-6 py-4 font-medium text-slate-800 dark:text-slate-200 text-sm">{report.category}</td>
-                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{formatDateID(report.receivedAt)}</td>
+                    <tr key={report.caseId || `fallback-${idx}`} className="hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group bg-white dark:bg-stone-900">
+                      <td className="px-6 py-4 font-mono font-bold text-stone-900 dark:text-stone-100 text-xs">{report.caseId}</td>
+                      <td className="px-6 py-4 font-mono text-stone-500 dark:text-stone-400 text-xs">{report.anonymousToken}</td>
+                      <td className="px-6 py-4 font-medium text-stone-800 dark:text-stone-200 text-sm">{report.category}</td>
+                      <td className="px-6 py-4 text-stone-500 dark:text-stone-400 text-xs whitespace-nowrap">{formatDateID(report.receivedAt)}</td>
                       <td className="px-6 py-4">
                         {report.evidences && report.evidences.length > 0 ? (
                           <span className="inline-flex items-center gap-1 text-xs text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 px-2.5 py-1 rounded-md font-semibold">
                             <Paperclip className="w-3 h-3" /> {report.evidences.length}
                           </span>
-                        ) : (<span className="text-slate-400 text-xs">—</span>)}
+                        ) : (<span className="text-stone-400 text-xs">—</span>)}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-bold border flex items-center w-max gap-1.5 ${STATUS_STYLES[report.status]}`}>
@@ -826,7 +855,7 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => openDetail(report)}
-                          className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-teal-50 dark:hover:bg-teal-950/60 hover:border-teal-200 dark:hover:border-teal-800 hover:text-teal-700 dark:hover:text-teal-300 text-slate-700 dark:text-slate-200 font-medium px-3 py-1.5 rounded-lg transition-all text-xs opacity-0 group-hover:opacity-100 shadow-xs cursor-pointer"
+                          className="inline-flex items-center gap-1.5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 hover:bg-teal-50 dark:hover:bg-teal-950/60 hover:border-teal-200 dark:hover:border-teal-800 hover:text-teal-700 dark:hover:text-teal-300 text-stone-700 dark:text-stone-200 font-medium px-3 py-1.5 rounded-lg transition-all text-xs opacity-0 group-hover:opacity-100 shadow-xs cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" /> Periksa & Verifikasi
                         </button>
@@ -841,7 +870,7 @@ export default function AdminDashboard() {
 
         {/* Disclaimer */}
         <div className="text-center pb-8">
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs text-stone-500 dark:text-stone-400 max-w-2xl mx-auto leading-relaxed">
             <AlertTriangle className="w-3.5 h-3.5 inline mr-1" />
             Sistem ini mencatat laporan yang diterima. Satgas bertugas memverifikasi keaslian berkas & SHA-256 checksum sebelum mengambil tindakan hukum/akademik.
           </p>
@@ -856,26 +885,26 @@ export default function AdminDashboard() {
 
 function StatCard({ icon, bg, label, value, pulse }: { icon: React.ReactNode; bg: string; label: string; value: number; pulse?: boolean; }) {
   return (
-    <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3 shadow-xs">
+    <div className="bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl border border-stone-200 dark:border-stone-800 rounded-2xl p-5 space-y-3 shadow-xs">
       <div className="flex justify-between items-start">
-        <div className={`p-2.5 ${bg} rounded-xl relative border border-slate-100 dark:border-slate-800`}>
+        <div className={`p-2.5 ${bg} rounded-xl relative border border-stone-100 dark:border-stone-800`}>
           {icon}
           {pulse && <span className="absolute top-0 right-0 w-2 h-2 bg-amber-400 rounded-full animate-ping" />}
         </div>
       </div>
       <div>
-        <p className="text-slate-500 dark:text-slate-400 text-xs mb-0.5 font-medium">{label}</p>
-        <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white">{value}</h3>
+        <p className="text-stone-500 dark:text-stone-400 text-xs mb-0.5 font-medium">{label}</p>
+        <h3 className="text-3xl font-extrabold text-stone-900 dark:text-white">{value}</h3>
       </div>
     </div>
   );
 }
 
-function DetailCell({ icon, label, value, valueClass = 'text-slate-900 dark:text-slate-100' }: { icon: React.ReactNode; label: string; value: string; valueClass?: string; }) {
+function DetailCell({ icon, label, value, valueClass = 'text-stone-900 dark:text-stone-100' }: { icon: React.ReactNode; label: string; value: string; valueClass?: string; }) {
   return (
-    <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-3 space-y-1">
-      <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase flex items-center gap-1.5">
-        <span className="text-slate-400">{icon}</span> {label}
+    <div className="bg-stone-50 dark:bg-stone-950/60 border border-stone-200 dark:border-stone-800 rounded-xl p-3 space-y-1">
+      <p className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase flex items-center gap-1.5">
+        <span className="text-stone-400">{icon}</span> {label}
       </p>
       <p className={`text-sm font-semibold ${valueClass} leading-snug break-words`}>{value}</p>
     </div>

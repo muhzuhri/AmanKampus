@@ -150,7 +150,7 @@ export default function TrackPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent text-stone-900 dark:text-stone-100 font-sans">
       <main className="max-w-3xl mx-auto px-6 pt-24 pb-16 relative z-10 flex-1">
 
         {/* SEARCH SECTION */}
@@ -158,8 +158,8 @@ export default function TrackPage() {
           <div className="w-14 h-14 bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 rounded-2xl flex items-center justify-center mx-auto">
             <ShieldCheck className="w-8 h-8 text-teal-600 dark:text-teal-400" />
           </div>
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Lacak Progres Secara Aman</h2>
-          <p className="text-slate-600 dark:text-slate-400 max-w-lg mx-auto text-sm">
+          <h2 className="text-3xl font-bold text-stone-900 dark:text-stone-50">Lacak Progres Secara Aman</h2>
+          <p className="text-stone-600 dark:text-stone-400 max-w-lg mx-auto text-sm">
             Masukkan Token Pelacakan Anonim Anda. Sistem kami akan mencari status terbaru tanpa meminta identitas, nama, atau kredensial login.
           </p>
         </motion.div>
@@ -171,8 +171,8 @@ export default function TrackPage() {
           onSubmit={handleSearch}
           className="relative max-w-xl mx-auto flex flex-col sm:flex-row gap-3 items-stretch"
         >
-          <div className="flex-1 flex items-center bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 px-4 shadow-xs focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-500/30 transition-all">
-            <Search className="w-5 h-5 text-slate-400 shrink-0" />
+          <div className="flex-1 flex items-center bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-600 px-4 shadow-xs focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-500/30 transition-all">
+            <Search className="w-5 h-5 text-stone-400 shrink-0" />
             <input
               type="text"
               placeholder="Contoh: AK-2026-X9K2P"
@@ -181,7 +181,7 @@ export default function TrackPage() {
                 setTokenInput(e.target.value);
                 if (searchStatus === 'error' || searchStatus === 'notFound') setSearchStatus('idle');
               }}
-              className="flex-1 bg-transparent border-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 text-slate-900 dark:text-slate-100 font-mono placeholder:font-sans placeholder:text-slate-400 px-3 py-3.5"
+              className="flex-1 bg-transparent border-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 text-stone-900 dark:text-stone-100 font-mono placeholder:font-sans placeholder:text-stone-400 px-3 py-3.5"
               required
             />
           </div>
@@ -206,24 +206,24 @@ export default function TrackPage() {
             {/* DEFAULT STATE */}
             {searchStatus === 'idle' && (
               <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 border-dashed rounded-2xl p-8 text-center max-w-xl mx-auto"
+                className="bg-white/80 dark:bg-stone-800/80 backdrop-blur-xl border border-stone-200 dark:border-stone-600 border-dashed rounded-2xl p-8 text-center max-w-xl mx-auto"
               >
-                <div className="text-slate-300 dark:text-slate-700 mb-4 flex justify-center"><Clock className="w-10 h-10" /></div>
-                <h4 className="font-semibold text-slate-700 dark:text-slate-300 mb-2">Menunggu Token</h4>
-                <p className="text-slate-400 text-sm">Masukan token Anda di area pencarian atas untuk melacak perkembangan penanganan kasus Anda.</p>
+                <div className="text-stone-300 dark:text-stone-700 mb-4 flex justify-center"><Clock className="w-10 h-10" /></div>
+                <h4 className="font-semibold text-stone-700 dark:text-stone-300 mb-2">Menunggu Token</h4>
+                <p className="text-stone-400 text-sm">Masukan token Anda di area pencarian atas untuk melacak perkembangan penanganan kasus Anda.</p>
               </motion.div>
             )}
 
             {/* NOT FOUND STATE */}
             {searchStatus === 'notFound' && (
               <motion.div key="notFound" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/50 rounded-2xl p-8 text-center max-w-xl mx-auto space-y-3 shadow-md"
+                className="bg-white dark:bg-stone-800 border border-rose-200 dark:border-rose-900/50 rounded-2xl p-8 text-center max-w-xl mx-auto space-y-3 shadow-md"
               >
                 <div className="w-12 h-12 bg-rose-50 dark:bg-rose-950/60 rounded-full flex items-center justify-center mx-auto text-rose-500">
                   <AlertCircle className="w-6 h-6" />
                 </div>
-                <h4 className="font-bold text-slate-900 dark:text-white text-lg">Token Tidak Ditemukan</h4>
-                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                <h4 className="font-bold text-stone-900 dark:text-stone-50 text-lg">Token Tidak Ditemukan</h4>
+                <p className="text-stone-600 dark:text-stone-400 text-sm leading-relaxed">
                   Token <code className="text-rose-600 dark:text-rose-400 font-mono font-bold bg-rose-50 dark:bg-rose-950 px-2 py-0.5 rounded">{tokenInput.toUpperCase()}</code> tidak terdaftar pada sistem AmanKampus. Silakan periksa kembali penulisan token atau buat laporan baru.
                 </p>
               </motion.div>
@@ -237,9 +237,9 @@ export default function TrackPage() {
               >
 
                 {/* Meta Info */}
-                <motion.div variants={FADE_IN} className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-md">
+                <motion.div variants={FADE_IN} className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-2xl p-6 shadow-md">
                   <div>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest font-semibold mb-1">Status Penanganan</p>
+                    <p className="text-xs text-stone-400 dark:text-stone-500 uppercase tracking-widest font-semibold mb-1">Status Penanganan</p>
                     <div className="flex items-center gap-3">
                       <div className="flex h-3 w-3 relative">
                         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
@@ -249,27 +249,27 @@ export default function TrackPage() {
                           foundReport.status === 'Selesai' ? 'bg-emerald-500' : 'bg-teal-500'
                         }`} />
                       </div>
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">{foundReport.status}</h3>
+                      <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50">{foundReport.status}</h3>
                     </div>
                   </div>
                   <div className="flex gap-6 text-sm">
                     <div className="text-right">
-                      <p className="text-slate-400 mb-1">Kategori</p>
-                      <p className="text-slate-700 dark:text-slate-300 font-medium">{foundReport.category}</p>
+                      <p className="text-stone-400 mb-1">Kategori</p>
+                      <p className="text-stone-700 dark:text-stone-300 font-medium">{foundReport.category}</p>
                     </div>
-                    <div className="text-right border-l border-slate-100 dark:border-slate-800 pl-6">
-                      <p className="text-slate-400 mb-1">Case ID</p>
+                    <div className="text-right border-l border-stone-100 dark:border-stone-600 pl-6">
+                      <p className="text-stone-400 mb-1">Case ID</p>
                       <p className="font-mono text-xs text-teal-700 dark:text-teal-400 font-bold">{foundReport.caseId}</p>
                     </div>
                   </div>
                 </motion.div>
 
                 {/* Timeline */}
-                <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-md">
-                  <h3 className="text-lg font-bold mb-7 flex items-center gap-2 text-slate-900 dark:text-white">
+                <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-2xl p-8 shadow-md">
+                  <h3 className="text-lg font-bold mb-7 flex items-center gap-2 text-stone-900 dark:text-stone-50">
                     <Clock className="w-5 h-5 text-teal-600 dark:text-teal-400" /> Timeline Penanganan Kasus
                   </h3>
-                  <div className="relative border-l-2 border-slate-200 dark:border-slate-800 ml-3 space-y-7">
+                  <div className="relative border-l-2 border-stone-200 dark:border-stone-600 ml-3 space-y-7">
                     {getTimelineSteps(foundReport).map((step, idx) => (
                       <div key={idx} className="relative pl-8">
                         {step.status === 'completed' && (
@@ -278,17 +278,17 @@ export default function TrackPage() {
                           </div>
                         )}
                         {step.status === 'current' && (
-                          <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-teal-500 border-2 border-white dark:border-slate-900 shadow-md flex items-center justify-center animate-pulse" />
+                          <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-teal-500 border-2 border-white dark:border-stone-900 shadow-md flex items-center justify-center animate-pulse" />
                         )}
                         {step.status === 'pending' && (
-                          <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700" />
+                          <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-stone-100 dark:bg-stone-700 border-2 border-stone-300 dark:border-stone-500" />
                         )}
                         <div className={step.status === 'pending' ? 'opacity-40' : 'opacity-100'}>
                           <h4 className={`font-semibold ${
                             step.status === 'current' ? 'text-teal-700 dark:text-teal-400 text-lg' :
-                            step.status === 'completed' ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400'
+                            step.status === 'completed' ? 'text-stone-800 dark:text-stone-200' : 'text-stone-400'
                           }`}>{step.label}</h4>
-                          <p className="text-xs text-slate-400 mt-0.5">{step.date}</p>
+                          <p className="text-xs text-stone-400 mt-0.5">{step.date}</p>
                         </div>
                       </div>
                     ))}
@@ -297,17 +297,17 @@ export default function TrackPage() {
 
                 {/* Evidence Verification Status (Features 1 & 5) */}
                 {foundReport.evidences && foundReport.evidences.length > 0 && (
-                  <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-7 shadow-md space-y-4">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-2xl p-7 shadow-md space-y-4">
+                    <h3 className="text-lg font-bold text-stone-900 dark:text-stone-50 flex items-center gap-2">
                       <Paperclip className="w-5 h-5 text-teal-600 dark:text-teal-400" /> Status Integritas & Verifikasi Bukti
                     </h3>
                     <div className="space-y-3">
                       {foundReport.evidences.map((ev) => {
                         const status = ev.verificationStatus || 'Belum Diverifikasi';
                         return (
-                          <div key={ev.evidenceId} className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
+                          <div key={ev.evidenceId} className="bg-stone-50 dark:bg-[#14302c] border border-stone-200 dark:border-stone-600 rounded-xl p-4 space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="font-semibold text-sm text-slate-800 dark:text-slate-200 truncate max-w-[240px]">{ev.fileName}</span>
+                              <span className="font-semibold text-sm text-stone-800 dark:text-stone-200 truncate max-w-[240px]">{ev.fileName}</span>
                               <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border flex items-center gap-1 ${
                                 status === 'Terverifikasi Valid' ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' :
                                 status === 'Tervalidasi Palsu / Ditolak' ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800' :
@@ -319,7 +319,7 @@ export default function TrackPage() {
                                 {status}
                               </span>
                             </div>
-                            <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                            <p className="text-[11px] font-mono text-stone-500 dark:text-stone-400 flex items-center gap-1">
                               <Hash className="w-3 h-3" /> SHA-256 Checksum: {ev.sha256.substring(0, 24)}...
                             </p>
                           </div>
@@ -330,26 +330,26 @@ export default function TrackPage() {
                 )}
 
                 {/* Chat Section */}
-                <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-7 shadow-md">
+                <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-2xl p-7 shadow-md">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-stone-900 dark:text-stone-50 flex items-center gap-2">
                       <MessageSquare className="w-5 h-5 text-teal-600 dark:text-teal-400" /> Komunikasi Aman (Dua-Arah)
                     </h3>
                   </div>
 
                   <div className="space-y-4 mb-5 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {/* System Greeting */}
-                    <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-slate-700 dark:text-slate-300 text-sm">
+                    <div className="bg-stone-50 dark:bg-[#14302c]/60 border border-stone-200 dark:border-stone-600 rounded-xl p-4 text-stone-700 dark:text-stone-300 text-sm">
                       <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400 text-xs font-mono font-semibold mb-2">
                         <Sparkles className="w-3.5 h-3.5" /> SISTEM AMANKAMPUS
                       </div>
-                      <p>Laporan Anda dengan token <strong className="text-slate-900 dark:text-white font-mono">{foundReport.anonymousToken}</strong> telah tercatat. Identitas Anda tidak disimpan. Satgas akan meninjau laporan dan memberikan instruksi melalui kotak masuk ini.</p>
+                      <p>Laporan Anda dengan token <strong className="text-stone-900 dark:text-stone-50 font-mono">{foundReport.anonymousToken}</strong> telah tercatat. Identitas Anda tidak disimpan. Satgas akan meninjau laporan dan memberikan instruksi melalui kotak masuk ini.</p>
                     </div>
 
                     {/* Messages */}
                     {foundReport.messages && foundReport.messages.map((msg) => (
                       <div key={msg.id} className={`flex flex-col ${msg.sender === 'Pelapor' ? 'items-end' : 'items-start'} gap-1 mt-3`}>
-                        <div className="text-[10px] text-slate-400 font-mono font-bold uppercase flex items-center gap-2">
+                        <div className="text-[10px] text-stone-400 font-mono font-bold uppercase flex items-center gap-2">
                           {msg.sender === 'Satgas' && <Shield className="w-3 h-3 text-teal-500" />}
                           {msg.sender}
                           <span className="opacity-60">{formatDate(msg.timestamp)}</span>
@@ -357,7 +357,7 @@ export default function TrackPage() {
                         <div className={`p-3.5 rounded-xl max-w-[85%] text-sm leading-relaxed ${
                           msg.sender === 'Pelapor'
                             ? 'bg-teal-600 text-white rounded-tr-xs font-medium shadow-xs'
-                            : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-tl-xs'
+                            : 'bg-stone-100 dark:bg-stone-700 border border-stone-200 dark:border-stone-500 text-stone-700 dark:text-stone-200 rounded-tl-xs'
                         }`}>
                           {msg.text}
                         </div>
@@ -366,14 +366,14 @@ export default function TrackPage() {
                   </div>
 
                   {/* Reply Input */}
-                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <div className="pt-4 border-t border-stone-100 dark:border-stone-600">
                     <form onSubmit={handleSendMessage} className="flex gap-3">
                       <input
                         type="text"
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
                         placeholder="Balas pesan atau tambahkan informasi secara anonim..."
-                        className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-teal-400 transition-all font-medium"
+                        className="flex-1 bg-stone-50 dark:bg-[#14302c] border border-stone-200 dark:border-stone-600 rounded-xl px-4 py-3 text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:border-teal-400 transition-all font-medium"
                         required
                       />
                       <button
@@ -384,7 +384,7 @@ export default function TrackPage() {
                         {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                       </button>
                     </form>
-                    <p className="mt-3 text-[10px] text-slate-400 flex items-center gap-1.5">
+                    <p className="mt-3 text-[10px] text-stone-400 flex items-center gap-1.5">
                       <Lock className="w-3 h-3" /> Tanggapan terenkripsi dan anonim. Identitas Anda tidak tersimpan.
                     </p>
                   </div>
@@ -397,9 +397,9 @@ export default function TrackPage() {
         </div>
 
         {/* EMERGENCY PFA LINK */}
-        <div className="mt-16 border-t border-slate-200 dark:border-slate-800 pt-8 text-center">
+        <div className="mt-16 border-t border-stone-200 dark:border-stone-600 pt-8 text-center">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="inline-flex flex-col items-center gap-3">
-            <p className="text-sm text-slate-400">Pengecekan status laporan terkadang menimbulkan kecemasan.</p>
+            <p className="text-sm text-stone-400">Pengecekan status laporan terkadang menimbulkan kecemasan.</p>
             <Link href="/#emergency" className="flex items-center gap-2 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 px-6 py-2.5 rounded-full transition-colors font-medium text-sm border border-rose-200 dark:border-rose-900/50">
               <HeartPulse className="w-4 h-4" /> Beralih ke Titik Penenang Darurat
             </Link>

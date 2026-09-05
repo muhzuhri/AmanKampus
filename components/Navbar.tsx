@@ -39,10 +39,10 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 inset-x-0 z-50 bg-stone-900/90 dark:bg-[#1a3330] backdrop-blur-md transition-colors ${
         isScrolled
-          ? 'bg-white/90 dark:bg-[#060913]/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs'
-          : 'bg-white/70 dark:bg-[#060913]/60 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/40'
+          ? 'border-b border-stone-800 dark:border-teal-900 shadow-md'
+          : 'border-b border-stone-800/80 dark:border-teal-800/80'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 h-18 flex items-center justify-between py-4">
@@ -56,7 +56,7 @@ export default function Navbar() {
               className="w-full h-full object-cover"
             />
           </div>
-          <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+          <span className="text-lg font-bold tracking-tight text-white dark:text-white group-hover:text-teal-400 dark:group-hover:text-teal-400 transition-colors">
             AmanKampus
           </span>
         </Link>
@@ -71,15 +71,15 @@ export default function Navbar() {
                 href={link.path}
                 className={`relative px-4 py-2 rounded-lg transition-all duration-200 ${
                   isActive
-                    ? 'text-teal-700 dark:text-teal-400 font-semibold bg-teal-50 dark:bg-teal-950/50'
-                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    ? 'text-teal-300 dark:text-teal-400 font-semibold bg-teal-950/60 dark:bg-teal-950/50'
+                    : 'text-stone-300 dark:text-stone-300 hover:text-white dark:hover:text-white hover:bg-stone-800 dark:hover:bg-stone-800'
                 }`}
               >
                 {link.name}
                 {isActive && (
                   <motion.div
                     layoutId="active-pill"
-                    className="absolute inset-0 border border-teal-200 dark:border-teal-500/40 rounded-lg"
+                    className="absolute inset-0 border border-teal-500/50 dark:border-teal-700 rounded-lg"
                     initial={false}
                     transition={{ type: "spring", stiffness: 350, damping: 32 }}
                   />
@@ -94,14 +94,14 @@ export default function Navbar() {
           {mounted && (
             <button
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 hover:text-teal-700 dark:hover:text-teal-400 transition-all duration-200 shadow-xs cursor-pointer"
+              className="p-2 rounded-xl border border-stone-700 dark:border-stone-600 bg-stone-800 hover:bg-stone-700 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-200 dark:text-stone-200 hover:text-teal-400 transition-colors cursor-pointer"
               aria-label="Toggle theme"
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               {isDark ? (
                 <Sun className="w-4.5 h-4.5 text-amber-400" />
               ) : (
-                <Moon className="w-4.5 h-4.5 text-slate-700" />
+                <Moon className="w-4.5 h-4.5 text-amber-200" />
               )}
             </button>
           )}
@@ -111,14 +111,13 @@ export default function Navbar() {
             onClick={() => {
               document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
             }}
-            className="flex items-center gap-2.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200/90 border border-slate-200 text-slate-700 hover:text-slate-900 rounded-xl px-3.5 py-2 transition-all dark:bg-slate-800/80 dark:hover:bg-slate-700/90 dark:border-slate-700 dark:text-slate-200 dark:hover:text-white cursor-pointer shadow-xs"
+            className="flex items-center gap-2.5 text-xs font-semibold bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 hover:text-white rounded-xl px-3.5 py-2 transition-colors dark:bg-stone-700 dark:hover:bg-stone-600 dark:border-stone-600 dark:text-stone-200 cursor-pointer"
           >
             <span>Pusat Perintah</span>
-            <span className="flex items-center gap-0.5 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-900 px-1.5 py-0.5 font-sans text-slate-800 dark:text-slate-200 shadow-xs font-bold text-[11px]">
+            <span className="flex items-center gap-0.5 border border-stone-600 dark:border-stone-600 rounded-md bg-stone-900 dark:bg-stone-900 px-1.5 py-0.5 font-sans text-stone-200 dark:text-stone-200 font-bold text-[11px]">
               <span>⌘</span>K
             </span>
           </button>
-          
           
         </div>
 
@@ -127,14 +126,14 @@ export default function Navbar() {
           {mounted && (
             <button
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+              className="p-2 rounded-lg border border-stone-700 dark:border-stone-700 bg-stone-800 dark:bg-stone-800 text-stone-200 dark:text-stone-300"
               aria-label="Toggle theme"
             >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
+              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-amber-200" />}
             </button>
           )}
           <button
-            className="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-2 text-stone-300 dark:text-stone-300 hover:text-white dark:hover:text-white hover:bg-stone-800 dark:hover:bg-stone-800 rounded-lg transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -151,7 +150,7 @@ export default function Navbar() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden overflow-hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800"
+            className="md:hidden overflow-hidden bg-[#e4e4e4] dark:bg-[#1a3330] border-b border-stone-300 dark:border-teal-800"
           >
             <div className="px-6 py-5 space-y-2 flex flex-col">
               {navLinks.map((link) => (
@@ -161,14 +160,14 @@ export default function Navbar() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`block px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                     pathname === link.path
-                      ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800'
+                      : 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800'
                   }`}
                 >
                   {link.name}
                 </Link>
               ))}
-              <div className="pt-3 mt-1 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-3 mt-1 border-t border-stone-100 dark:border-stone-800">
                 <Link
                   href="/report"
                   onClick={() => setIsMobileMenuOpen(false)}

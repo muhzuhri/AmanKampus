@@ -7,7 +7,6 @@ import {
   AlertCircle,
   ChevronRight,
   Sparkles,
-  Lock,
   Scale,
   MessageSquareWarning,
   UserX,
@@ -32,7 +31,7 @@ const VIOLATIONS_SUMMARY: ViolationItem[] = [
     category: 'Perundungan Siber (Cyberbullying)',
     shortTag: 'Siber & Medsos',
     legalBasis: 'Permendikbud No. 30/2021 & UU ITE',
-    icon: <MessageSquareWarning className="w-5 h-5 text-indigo-500" />,
+    icon: <MessageSquareWarning className="w-5 h-5 text-teal-800" />,
     characteristics: [
       'Pesan intimidasi/ancaman terus-menerus di obrolan digital',
       'Grup khusus untuk mengolok-olok atau mengisolasi korban',
@@ -88,25 +87,25 @@ export default function ViolationsCatalogSection() {
   const [expandedId, setExpandedId] = useState<string | null>('cyberbullying');
 
   return (
-    <section className="relative z-10 space-y-10">
+    <section className="relative z-10 space-y-10 home-block">
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-stone-200 dark:border-stone-700 pb-6">
         <div className="space-y-2 max-w-2xl">
-          <div className="inline-flex items-center gap-2 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 px-3.5 py-1 rounded-full text-xs font-bold text-rose-600 dark:text-rose-400">
+          <div className="inline-flex items-center gap-2 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-600 px-3.5 py-1 rounded-full text-xs font-semibold text-stone-700 dark:text-stone-300">
             <AlertCircle className="w-3.5 h-3.5" />
             <span>Katalog Ringkas Pelanggaran</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-semibold text-stone-900 dark:text-white tracking-tight">
             Kenali Bentuk & Ciri-Ciri Pelanggaran
           </h2>
-          <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+          <p className="text-sm md:text-base text-stone-600 dark:text-stone-400 leading-relaxed">
             Ringkasan kategori kekerasan digital & akademik di lingkungan kampus beserta indikator utama untuk perlindungan bersama.
           </p>
         </div>
 
         <Link
           href="/education"
-          className="inline-flex items-center gap-2 text-xs font-bold text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-300 transition-colors group cursor-pointer shrink-0"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-teal-800 dark:text-teal-400 hover:text-teal-900 transition-colors group cursor-pointer shrink-0"
         >
           <span>Lihat Edukasi Selengkapnya</span>
           <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -114,7 +113,7 @@ export default function ViolationsCatalogSection() {
       </div>
 
       {/* LINE-BASED NON-BOX DESIGN CATALOG */}
-      <div className="relative pl-3 md:pl-6 border-l-2 border-slate-200 dark:border-slate-800 space-y-4">
+      <div className="relative pl-3 md:pl-6 border-l-2 border-stone-200 dark:border-stone-700 space-y-4">
         {VIOLATIONS_SUMMARY.map((item) => {
           const isExpanded = expandedId === item.id;
 
@@ -127,8 +126,8 @@ export default function ViolationsCatalogSection() {
               <div
                 className={`absolute -left-[19px] md:-left-[31px] top-6 w-3 h-3 rounded-full border-2 transition-all duration-300 ${
                   isExpanded
-                    ? 'bg-teal-500 border-teal-400 ring-4 ring-teal-500/20 scale-125'
-                    : 'bg-slate-300 dark:bg-slate-700 border-slate-100 dark:border-slate-900 group-hover:bg-teal-400'
+                    ? 'bg-teal-800 border-teal-700 ring-4 ring-teal-800/15'
+                    : 'bg-stone-300 dark:bg-stone-600 border-stone-100 dark:border-stone-900 group-hover:bg-teal-600'
                 }`}
               />
 
@@ -137,27 +136,27 @@ export default function ViolationsCatalogSection() {
                 onClick={() => setExpandedId(isExpanded ? null : item.id)}
                 className={`py-5 px-5 md:px-7 rounded-2xl transition-all duration-300 cursor-pointer relative overflow-hidden ${
                   isExpanded
-                    ? 'bg-slate-100/90 dark:bg-slate-900/90 border-l-4 border-l-teal-500 shadow-md'
-                    : 'bg-white/40 dark:bg-slate-950/40 hover:bg-slate-100/60 dark:hover:bg-slate-900/50 border-l-2 border-l-transparent hover:border-l-teal-400/50'
+                    ? 'bg-[#f4f4f4] dark:bg-stone-700 border-l-4 border-l-teal-800 shadow-sm border border-stone-300 dark:border-stone-600'
+                    : 'bg-[#f0f0f0]/80 dark:bg-stone-800/50 hover:bg-[#f7f7f7] dark:hover:bg-stone-700 border border-transparent hover:border-stone-300 dark:hover:border-stone-600 border-l-2 border-l-transparent hover:border-l-teal-800'
                 }`}
               >
                 {/* Header Row */}
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4 min-w-0">
-                    <span className="font-mono text-sm md:text-base font-bold text-slate-400 dark:text-slate-600 shrink-0">
+                    <span className="font-mono text-sm md:text-base font-bold text-stone-400 dark:text-stone-500 shrink-0">
                       [{item.number}]
                     </span>
 
-                    <div className="p-2 rounded-xl bg-slate-200/50 dark:bg-slate-800/60 shrink-0">
+                    <div className="p-2 rounded-lg bg-stone-100 dark:bg-stone-800 shrink-0">
                       {item.icon}
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-2.5 flex-wrap">
-                        <h3 className="text-base md:text-lg font-bold text-slate-900 dark:text-white truncate">
+                        <h3 className="text-base md:text-lg font-semibold text-stone-900 dark:text-white truncate">
                           {item.category}
                         </h3>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-600">
                           {item.shortTag}
                         </span>
                       </div>
@@ -165,12 +164,12 @@ export default function ViolationsCatalogSection() {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="hidden sm:inline-block text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                    <span className="hidden sm:inline-block text-[11px] font-mono text-stone-500 dark:text-stone-400">
                       {item.characteristics.length} Ciri Utama
                     </span>
                     <ChevronRight
-                      className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${
-                        isExpanded ? 'rotate-90 text-teal-500' : 'group-hover:translate-x-0.5'
+                      className={`w-5 h-5 text-stone-400 transition-transform duration-300 ${
+                        isExpanded ? 'rotate-90 text-teal-800' : 'group-hover:translate-x-0.5'
                       }`}
                     />
                   </div>
@@ -186,8 +185,8 @@ export default function ViolationsCatalogSection() {
                       transition={{ duration: 0.25 }}
                       className="overflow-hidden"
                     >
-                      <div className="pt-4 mt-4 border-t border-slate-200/60 dark:border-slate-800/80 space-y-3">
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <div className="pt-4 mt-4 border-t border-stone-200 dark:border-stone-700 space-y-3">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5 text-teal-500" />
                           Ciri-Ciri & Indikator Utama:
                         </p>
@@ -196,7 +195,7 @@ export default function ViolationsCatalogSection() {
                           {item.characteristics.map((char, cIdx) => (
                             <div
                               key={cIdx}
-                              className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300 bg-white/60 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200/50 dark:border-slate-800/50"
+                              className="flex items-start gap-2.5 text-xs text-stone-700 dark:text-stone-300 bg-stone-50 dark:bg-stone-900 p-2.5 rounded-xl border border-stone-200 dark:border-stone-700"
                             >
                               <span className="w-1.5 h-1.5 rounded-full bg-teal-500 mt-1.5 shrink-0" />
                               <span className="leading-relaxed font-medium">{char}</span>
@@ -204,10 +203,10 @@ export default function ViolationsCatalogSection() {
                           ))}
                         </div>
 
-                        <div className="pt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                        <div className="pt-2 flex items-center justify-between text-[11px] text-stone-500 dark:text-stone-400 font-mono">
                           <span className="flex items-center gap-1.5">
                             <FileText className="w-3.5 h-3.5 text-teal-500" />
-                            Landasan Hukum: <strong className="text-slate-700 dark:text-slate-300">{item.legalBasis}</strong>
+                            Landasan Hukum: <strong className="text-stone-700 dark:text-stone-300">{item.legalBasis}</strong>
                           </span>
                         </div>
                       </div>

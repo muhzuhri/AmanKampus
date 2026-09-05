@@ -213,15 +213,15 @@ function BreathingWidget() {
   };
 
   return (
-    <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-teal-500/30 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden space-y-6">
+    <div className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-teal-500/30 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden space-y-6">
       
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-100 dark:border-stone-600 pb-4">
         <div>
           <div className="inline-flex items-center gap-2 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 px-3 py-1 rounded-full text-teal-700 dark:text-teal-300 text-xs font-bold mb-1">
             <Wind className="w-3.5 h-3.5" /> Widget Relaksasi Mandiri (4-7-8 Technique)
           </div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Panduan Pernapasan Penenang Kepanikan</h2>
+          <h2 className="text-xl font-extrabold text-stone-900 dark:text-stone-50">Panduan Pernapasan Penenang Kepanikan</h2>
         </div>
         <div className="flex items-center gap-3 self-start sm:self-auto">
           <button
@@ -231,14 +231,14 @@ function BreathingWidget() {
             className={`p-2 rounded-xl border text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               isPlayingAudio
                 ? 'bg-teal-50 dark:bg-teal-950/80 border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-300 shadow-xs'
-                : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                : 'bg-stone-100 dark:bg-stone-700 border-stone-200 dark:border-stone-500 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
             }`}
           >
             {isPlayingAudio ? <Volume2 className="w-4 h-4 text-teal-600 dark:text-teal-400 animate-pulse" /> : <VolumeX className="w-4 h-4" />}
             <span className="hidden sm:inline">{isPlayingAudio ? 'Audio 432Hz Aktif' : 'Suara Relax'}</span>
           </button>
 
-          <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <div className="flex items-center gap-2 bg-stone-100 dark:bg-stone-700 px-3 py-2 rounded-xl text-xs font-semibold text-stone-700 dark:text-stone-300">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span>Siklus: <strong>{cyclesCompleted}</strong></span>
           </div>
@@ -266,10 +266,10 @@ function BreathingWidget() {
 
           {/* Inner Circle Content */}
           <div className="relative z-10 flex flex-col items-center text-center p-4">
-            <p className="text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">
+            <p className="text-xs uppercase tracking-widest font-bold text-stone-400 mb-1">
               {isActive ? currentPhase.action : 'Siap Mulai'}
             </p>
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-1">
+            <h3 className="text-2xl font-black text-stone-900 dark:text-stone-50 mb-1">
               {isActive ? currentPhase.name : '4-7-8 Breathing'}
             </h3>
             <span className="text-4xl font-extrabold font-mono text-teal-600 dark:text-teal-400">
@@ -278,7 +278,7 @@ function BreathingWidget() {
           </div>
         </div>
 
-        <p className="mt-6 text-sm text-slate-600 dark:text-slate-300 font-medium text-center max-w-md h-10">
+        <p className="mt-6 text-sm text-stone-600 dark:text-stone-300 font-medium text-center max-w-md h-10">
           {isActive ? currentPhase.text : 'Tekan tombol Mulai di bawah untuk memulai sesi pernapasan terarah & audio relaksasi.'}
         </p>
       </div>
@@ -301,7 +301,7 @@ function BreathingWidget() {
         <button
           type="button"
           onClick={resetTimer}
-          className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+          className="px-4 py-3 rounded-xl border border-stone-200 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 font-semibold text-sm transition-colors flex items-center gap-1.5 cursor-pointer"
         >
           <RotateCcw className="w-4 h-4" /> Reset
         </button>
@@ -311,68 +311,16 @@ function BreathingWidget() {
   );
 }
 
+import { EMERGENCY_CONTACTS, QUICK_SAFETY_ACTIONS } from '@/data/pfaSupportData';
+
 // ─── Main Support Page ────────────────────────────────────────────────────────
 
 export default function SupportPage() {
-  const emergencyContacts = [
-    {
-      title: 'Hotline Resmi Satgas PPKS (24 Jam)',
-      subtitle: 'Penanganan Darurat, Pendampingan Hukum & Pengaduan Langsung',
-      phone: '0812-9900-PPKS',
-      waLink: 'https://wa.me/6281299007757',
-      icon: <PhoneCall className="w-5 h-5 text-teal-600 dark:text-teal-400" />,
-      badge: 'Respon Cepat 24/7',
-      bg: 'bg-teal-50 dark:bg-teal-950/60 border-teal-200 dark:border-teal-800',
-    },
-    {
-      title: 'Layanan Konseling Psikologi Kampus',
-      subtitle: 'Dukungan Kesehatan Mental, PFA & Pendampingan Trauma',
-      phone: '0813-8877-KONSUL',
-      waLink: 'https://wa.me/6281388775665',
-      icon: <HeartHandshake className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />,
-      badge: 'Rahasia & Komfidesial',
-      bg: 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200 dark:border-indigo-800',
-    },
-    {
-      title: 'Unit Layanan Krisis & Medis Pertama',
-      subtitle: 'Penanganan Medis Fisik Darurat & Evakuasi Aman',
-      phone: '119 / 0811-MEDIS-KAMPUS',
-      waLink: 'https://wa.me/628116334778',
-      icon: <LifeBuoy className="w-5 h-5 text-rose-600 dark:text-rose-400" />,
-      badge: 'Darurat Medis',
-      bg: 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800',
-    },
-  ];
-
-  const quickActions = [
-    {
-      step: '01',
-      title: 'Amankan Diri Secara Fisik',
-      desc: 'Jika Anda berada di lokasi yang tidak aman, segera bergerak ke area terbuka yang ramai atau menuju pos keamanan kampus terdekat.',
-      icon: <ShieldAlert className="w-5 h-5 text-amber-500" />,
-    },
-    {
-      step: '02',
-      title: 'Dokumentasikan Bukti Digital',
-      desc: 'Ambil tangkapan layar (screenshot) obrolan, tanggal, waktu, dan tautan akun pelaku sebelum konten dihapus atau diblokir.',
-      icon: <ShieldCheck className="w-5 h-5 text-teal-500" />,
-    },
-    {
-      step: '03',
-      title: 'Batasi Kontak & Ganti Kunci Akses',
-      desc: 'Hapus sesi login perangkat publik, aktifkan otentikasi dua langkah (2FA), dan hindari merespons provokasi pelaku.',
-      icon: <Lock className="w-5 h-5 text-indigo-500" />,
-    },
-    {
-      step: '04',
-      title: 'Kirim Laporan Anonim Terenkripsi',
-      desc: 'Gunakan formulir AmanKampus untuk menyampaikan bukti dengan jaminan EXIF Stripping & SHA-256 tanpa perlu login.',
-      icon: <UserCheck className="w-5 h-5 text-emerald-500" />,
-    },
-  ];
+  const emergencyContacts = EMERGENCY_CONTACTS;
+  const quickActions = QUICK_SAFETY_ACTIONS;
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-900 dark:text-slate-100 font-sans selection:bg-teal-500/20 pt-24 pb-20">
+    <div className="min-h-screen bg-transparent text-stone-900 dark:text-stone-100 font-sans selection:bg-teal-500/20 pt-24 pb-20">
       
       <main className="max-w-5xl mx-auto px-4 sm:px-6 space-y-12 relative z-10">
 
@@ -381,10 +329,10 @@ export default function SupportPage() {
           <div className="inline-flex items-center gap-2 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 px-4 py-1.5 rounded-full text-teal-700 dark:text-teal-300 text-xs font-bold shadow-xs">
             <HeartHandshake className="w-4 h-4" /> Pusat Bantuan & Psychological First Aid (PFA)
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-stone-900 dark:text-stone-50">
             Anda Tidak Sendirian. Kami Ada di Sini.
           </h1>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-stone-600 dark:text-stone-300 max-w-2xl mx-auto leading-relaxed">
             Halaman ini didedikasikan untuk memberikan pertolongan pertama penenang kecemasan, panduan amankan diri, serta nomor darurat yang siap mendampingi Anda kapan saja.
           </p>
         </div>
@@ -395,10 +343,10 @@ export default function SupportPage() {
         {/* DAFTAR KONTAK DARURAT KAMPUS */}
         <div className="space-y-6">
           <div className="space-y-1">
-            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5">
+            <h2 className="text-2xl font-extrabold text-stone-900 dark:text-stone-50 flex items-center gap-2.5">
               <PhoneCall className="w-6 h-6 text-teal-600 dark:text-teal-400" /> Kontak Darurat & Hotline Satgas
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-stone-600 dark:text-stone-400">
               Tim pendamping siap menerima panggilan atau pesan pesan instan untuk memberikan perlindungan darurat.
             </p>
           </div>
@@ -410,28 +358,28 @@ export default function SupportPage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.1 }}
-                className={`bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border ${contact.bg} rounded-3xl p-6 space-y-4 shadow-lg flex flex-col justify-between`}
+                className={`bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border ${contact.bg} rounded-3xl p-6 space-y-4 shadow-lg flex flex-col justify-between`}
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="p-3 bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                    <div className="p-3 bg-white dark:bg-[#14302c] rounded-2xl border border-stone-200 dark:border-stone-600 shadow-xs">
                       {contact.icon}
                     </div>
-                    <span className="px-3 py-1 bg-white/80 dark:bg-slate-950/80 rounded-full text-[11px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                    <span className="px-3 py-1 bg-white/80 dark:bg-[#14302c]/80 rounded-full text-[11px] font-bold text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-600">
                       {contact.badge}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="font-extrabold text-base text-slate-900 dark:text-white leading-snug">{contact.title}</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{contact.subtitle}</p>
+                    <h3 className="font-extrabold text-base text-stone-900 dark:text-stone-50 leading-snug">{contact.title}</h3>
+                    <p className="text-xs text-stone-500 dark:text-stone-400 mt-1 leading-relaxed">{contact.subtitle}</p>
                   </div>
                 </div>
 
                 <div className="pt-2 space-y-2">
                   <a
                     href={`tel:${contact.phone.replace(/[^0-9]/g, '')}`}
-                    className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-xs"
+                    className="w-full bg-stone-900 dark:bg-white text-white dark:text-stone-900 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-stone-800 dark:hover:bg-stone-100 transition-colors shadow-xs"
                   >
                     <PhoneCall className="w-3.5 h-3.5" /> Panggil: {contact.phone}
                   </a>
@@ -450,32 +398,32 @@ export default function SupportPage() {
         </div>
 
         {/* PANDUAN TINDAKAN CEPT (FAST EMERGENCY ACTIONS) */}
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
           <div className="space-y-1">
-            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5">
+            <h2 className="text-2xl font-extrabold text-stone-900 dark:text-stone-50 flex items-center gap-2.5">
               <ShieldCheck className="w-6 h-6 text-teal-600 dark:text-teal-400" /> Langkah Cepat Pengamanan Diri
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-stone-600 dark:text-stone-400">
               Langkah awal yang harus dilakukan korban untuk mengamankan fisik dan jejak bukti digital secara mandiri.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {quickActions.map((act, i) => (
-              <div key={i} className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-2 flex items-start gap-4">
+              <div key={i} className="bg-stone-50 dark:bg-[#14302c]/60 border border-stone-200 dark:border-stone-600 rounded-2xl p-5 space-y-2 flex items-start gap-4">
                 <span className="font-mono text-2xl font-black text-teal-600 dark:text-teal-400 shrink-0">{act.step}</span>
                 <div className="space-y-1">
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <h3 className="font-bold text-sm text-stone-900 dark:text-stone-50 flex items-center gap-2">
                     {act.icon} {act.title}
                   </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{act.desc}</p>
+                  <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">{act.desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <div className="pt-4 border-t border-stone-100 dark:border-stone-600 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400 font-medium">
               <AlertCircle className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
               <span>Semua laporan yang masuk diproses dengan standar proteksi anonimitas Zero-Knowledge.</span>
             </div>

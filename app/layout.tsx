@@ -21,7 +21,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { CommandPalette } from "@/components/CommandPalette";
-import AntiGravityCanvas from "@/components/hero/AntiGravityCanvas";
+import PageBackdrop from "@/components/PageBackdrop";
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -30,10 +30,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-[#060913] dark:text-slate-100 relative" suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {/* Global 3D Anti-Gravity Floating Micro-Cubes Canvas across all user pages */}
-          <AntiGravityCanvas />
+      <body className="min-h-full flex flex-col bg-[#ececec] text-stone-800 dark:bg-[#2c2926] dark:text-stone-100 relative" suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+          <PageBackdrop />
 
           <Navbar />
           <CommandPalette />

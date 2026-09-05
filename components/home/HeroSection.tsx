@@ -5,6 +5,8 @@ import { motion, type Variants } from 'framer-motion';
 import GlowingHeadline from '@/components/hero/GlowingHeadline';
 import GlassmorphismCTA from '@/components/hero/GlassmorphismCTA';
 import AntiGravityCard from '@/components/hero/AntiGravityCard';
+import TiltCard from '@/components/hero/TiltCard';
+import Hero3DBackground from '@/components/home/Hero3DBackground';
 
 const STAGGER: Variants = {
   hidden: { opacity: 0 },
@@ -19,7 +21,7 @@ const STAGGER: Variants = {
 
 export default function HeroSection() {
   return (
-    <div className="relative min-h-[82vh] flex items-center justify-center pt-4">
+    <div className="relative min-h-[72vh] flex items-center justify-center pt-4 home-block">
       {/* Hero Content Foreground Container */}
       <motion.section
         initial="hidden"
@@ -34,8 +36,12 @@ export default function HeroSection() {
         </div>
 
         {/* Right Column: Floating Interactive Encryption Demo Card */}
-        <div className="lg:col-span-5 flex justify-center lg:justify-end">
-          <AntiGravityCard />
+        <div className="lg:col-span-5 relative flex justify-center lg:justify-end">
+          <div className="relative z-10 w-full">
+            <TiltCard>
+              <AntiGravityCard />
+            </TiltCard>
+          </div>
         </div>
       </motion.section>
     </div>

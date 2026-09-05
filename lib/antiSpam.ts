@@ -58,6 +58,72 @@ export function checkSubmissionRateLimit(): AntiSpamCheckResult {
 }
 
 /**
+ * Menolak kronologi yang terlalu pendek / generik agar formulir tidak dipakai saling menjatuhkan tanpa substansi.
+ */
+export function assessChronologyQuality(chronology: string): AntiSpamCheckResult {
+  const cleaned = chronology.replace(/\s+/g, ' ').trim();
+  const words = cleaned.split(' ').filter(Boolean);
+
+  if (cleaned.length < 80) {
+    return {
+      allowed: false,
+      message: 'Kronologi terlalu singkat. Jelaskan kejadian secara konkret (minimal sekitar 80 karakter) agar laporan tidak disalahgunakan untuk tuduhan kosong.',
+    };
+  }
+
+  if (words.length < 12) {
+    return {
+      allowed: false,
+      message: 'Kronologi perlu lebih rinci (minimal 12 kata) mencakup apa yang terjadi, kapan, dan mengapa ini pelanggaran — bukan sekadar tuduhan nama.',
+    };
+  }
+
+  if (/(.)\1{10,}/.test(cleaned)) {
+    return {
+      allowed: false,
+      message: 'Teks kronologi terdeteksi tidak wajar. Harap tulis uraian kejadian yang sesungguhnya.',
+    };
+  }
+
+  return { allowed: true };
+}
+
+const EVIDENCE_HASH_KEY = 'ak_evidence_hashes';
+
+type EvidenceHashRecord = { sha256: string; caseId: string; timestamp: number };
+
+function readEvidenceHashes(): EvidenceHashRecord[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(EVIDENCE_HASH_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Mencegah daur ulang berkas bukti yang sama di banyak laporan (saling lapor dengan file identik).
+ */
+export function findDuplicateEvidenceHash(sha256: string): { duplicate: boolean; caseId?: string } {
+  const hit = readEvidenceHashes().find((row) => row.sha256 === sha256);
+  return hit ? { duplicate: true, caseId: hit.caseId } : { duplicate: false };
+}
+
+export function recordEvidenceHashes(caseId: string, hashes: string[]): void {
+  if (typeof window === 'undefined') return;
+  const now = Date.now();
+  const existing = readEvidenceHashes().filter((row) => now - row.timestamp < 30 * 24 * 3600 * 1000);
+  for (const sha256 of hashes) {
+    if (!sha256) continue;
+    existing.push({ sha256, caseId, timestamp: now });
+  }
+  localStorage.setItem(EVIDENCE_HASH_KEY, JSON.stringify(existing));
+}
+
+/**
  * Mencatat pengiriman laporan baru untuk memperbarui rate-limit
  */
 export function recordSubmission(): void {

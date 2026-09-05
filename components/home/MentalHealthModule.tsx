@@ -174,20 +174,20 @@ export default function MentalHealthModule() {
       variants={FADE_UP}
       transition={FADE_UP_TRANSITION}
       id="emergency"
-      className="max-w-3xl mx-auto text-center space-y-8 py-6"
+      className="max-w-3xl mx-auto text-center space-y-8 py-6 home-block"
     >
       <div className="space-y-3">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold uppercase tracking-widest">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-stone-200 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-semibold uppercase tracking-widest">
           <HeartPulse className="w-4 h-4" />
           <span>Modul Pertolongan Pertama Emosional</span>
         </div>
-        <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white">Sedang Merasa Panik atau Cemas?</h2>
-        <p className="text-slate-700 dark:text-slate-300 text-base leading-relaxed max-w-xl mx-auto font-medium">
+        <h2 className="text-3xl md:text-4xl font-semibold text-stone-900 dark:text-white">Sedang merasa panik atau cemas?</h2>
+        <p className="text-stone-600 dark:text-stone-400 text-base leading-relaxed max-w-xl mx-auto">
           Istirahat sejenak. Gunakan irama pernapasan 4-7-8 dan nada relaksasi sintetis kami untuk menenangkan kecemasan akut sebelum Anda mulai melaporkan.
         </p>
       </div>
 
-      <div className="relative bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 sm:p-12 shadow-md space-y-8 overflow-hidden">
+      <div className="relative bg-[#f4f4f4] dark:bg-stone-700 rounded-2xl border border-stone-300 dark:border-stone-600 p-8 sm:p-12 shadow-sm space-y-8">
 
         {/* Audio Toggle */}
         <div className="flex justify-center">

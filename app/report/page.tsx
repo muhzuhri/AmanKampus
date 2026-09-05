@@ -35,7 +35,20 @@ import {
   fileToArrayBuffer,
   analyzeImageForensics,
 } from '@/lib/crypto';
-import { generateHumanChallenge, checkSubmissionRateLimit } from '@/lib/antiSpam';
+import {
+  analyzeVideoForensics,
+  analyzeAudioForensics,
+  stripMetadataFromVideo,
+  stripMetadataFromAudio,
+} from '@/lib/mediaForensics';
+import {
+  generateHumanChallenge,
+  checkSubmissionRateLimit,
+  recordSubmission,
+  assessChronologyQuality,
+  findDuplicateEvidenceHash,
+  recordEvidenceHashes,
+} from '@/lib/antiSpam';
 import { type Report, type Evidence } from '@/lib/types';
 
 // ─── Helpers & Config ──────────────────────────────────────────────────────────
@@ -145,7 +158,7 @@ const StepIndicator = ({ current }: { current: number }) => {
   ];
   return (
     <div className="flex items-center justify-between relative mb-10">
-      <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 dark:bg-slate-800 -z-10">
+      <div className="absolute top-5 left-0 right-0 h-0.5 bg-stone-300 dark:bg-stone-600 -z-10">
         <motion.div
           className="h-full bg-teal-500"
           initial={{ width: '0%' }}
@@ -161,14 +174,14 @@ const StepIndicator = ({ current }: { current: number }) => {
                 ? 'bg-teal-500 text-white shadow-xs'
                 : current === s.num
                 ? 'bg-teal-600 text-white border-2 border-teal-300 dark:border-teal-400 shadow-md'
-                : 'bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-400'
+                : 'bg-[#eeeeee] dark:bg-stone-800 border-2 border-stone-300 dark:border-stone-600 text-stone-400'
             }`}
           >
             {current > s.num ? <Check className="w-5 h-5" /> : s.num}
           </div>
           <span
             className={`text-xs font-semibold ${
-              current >= s.num ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400'
+              current >= s.num ? 'text-stone-800 dark:text-stone-100' : 'text-stone-400'
             }`}
           >
             {s.label}
@@ -256,32 +269,40 @@ export default function ReportPage() {
 
       const forensicResults: ForensicFile[] = [];
       for (const file of valid) {
-        // Read raw buffer of ORIGINAL UNTOUCHED FILE before EXIF stripping
+        // Read raw buffer of ORIGINAL UNTOUCHED FILE before EXIF/metadata stripping
         const rawBuffer = await fileToArrayBuffer(file);
         
-        // Deep Binary & Image Forensic Scan on ORIGINAL file buffer
-        const forensic = analyzeImageForensics(file, rawBuffer);
+        let forensic: { status: 'Original' | 'Needs Review' | 'Manipulated'; details: string[] };
+        let cleanResult: { cleanFile: File; stripped: boolean };
 
-        // Feature 1: EXIF Metadata Stripping for Privacy & Security
-        const { cleanFile, stripped } = await stripExifFromImage(file);
+        if (file.type.startsWith('video/') || /\.(mp4|webm|mov)$/i.test(file.name)) {
+          forensic = analyzeVideoForensics(file, rawBuffer);
+          cleanResult = await stripMetadataFromVideo(file);
+        } else if (file.type.startsWith('audio/') || /\.(mp3|wav|ogg|m4a)$/i.test(file.name)) {
+          forensic = analyzeAudioForensics(file, rawBuffer);
+          cleanResult = await stripMetadataFromAudio(file);
+        } else {
+          forensic = analyzeImageForensics(file, rawBuffer);
+          cleanResult = await stripExifFromImage(file);
+        }
+
+        const { cleanFile, stripped } = cleanResult;
         
-        // Feature 1: Cryptographic SHA-256 Hashing of clean file
+        // Cryptographic SHA-256 Hashing of clean file
         const cleanBuffer = await fileToArrayBuffer(cleanFile);
         const hash = await calculateSHA256(cleanBuffer);
 
         let status: 'Original' | 'Needs Review' | 'Manipulated' = forensic.status;
-        let details: string[] = [
+        const details: string[] = [
           `SHA-256 Checksum: ${hash.substring(0, 16)}...`,
           ...forensic.details,
         ];
 
         if (isLiveCapture) {
-          status = 'Original';
-          details = [
-            `SHA-256: ${hash.substring(0, 16)}...`,
-            'Kamera Internal: Live Capture Tervalidasi',
-            'Metadata GPS: Dibersihkan (Clean EXIF)',
-          ];
+          details.unshift('Kamera Internal: rekaman langsung dari browser (bukan unduhan ChatGPT/DALL·E).');
+          if (status === 'Original') {
+            details.push('Metadata GPS: dibersihkan (Clean EXIF).');
+          }
         }
 
         forensicResults.push({
@@ -327,7 +348,12 @@ export default function ReportPage() {
   const validateStep1 = (): boolean => {
     const errs: ValidationErrors = {};
     if (!category) errs.category = 'Pilih kategori kasus terlebih dahulu.';
-    if (!chronology.trim()) errs.chronology = 'Kronologi kejadian wajib diisi.';
+    if (!chronology.trim()) {
+      errs.chronology = 'Kronologi kejadian wajib diisi.';
+    } else {
+      const quality = assessChronologyQuality(chronology);
+      if (!quality.allowed) errs.chronology = quality.message;
+    }
     if (!incidentTime.trim()) errs.incidentTime = 'Waktu kejadian wajib diisi.';
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -335,7 +361,19 @@ export default function ReportPage() {
 
   const goNext = () => {
     if (step === 1 && !validateStep1()) return;
+    if (step === 2) {
+      const needsContext = pendingFiles.filter(
+        (f) => f.forensicStatus !== 'Original' && f.reporterNote.trim().length < 5
+      );
+      if (needsContext.length > 0) {
+        setFileErrors([
+          '⚠️ TERDETEKSI HASIL AI / PERLU ALASAN: Terdapat berkas terindikasi AI atau tanpa EXIF asli yang belum dilengkapi alasan (minimal 5 karakter). Silakan berikan alasan pada kolom catatan berkas di bawah ini.',
+        ]);
+        return;
+      }
+    }
     setErrors({});
+    setFileErrors([]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setStep((prev) => Math.min(prev + 1, 3) as 1 | 2 | 3);
   };
@@ -365,10 +403,17 @@ export default function ReportPage() {
       return;
     }
 
+    const chronologyCheck = assessChronologyQuality(chronology);
+    if (!chronologyCheck.allowed) {
+      setSpamError(chronologyCheck.message || 'Kronologi tidak memenuhi syarat substansi.');
+      return;
+    }
+
     setSpamError('');
     setIsSubmitting(true);
     setSubmittingPhase(1);
 
+    const abuseFlags: string[] = [];
     const evidences: Evidence[] = [];
     for (const pFile of pendingFiles) {
       let dataUrl: string | undefined = undefined;
@@ -382,6 +427,24 @@ export default function ReportPage() {
         console.warn('Gagal membaca dataUrl', e);
       }
 
+      const dup = findDuplicateEvidenceHash(pFile.sha256);
+      const forensicDetails = [...pFile.forensicDetails];
+      let verificationStatus: Evidence['verificationStatus'] = 'Belum Diverifikasi';
+      let verificationNote: string | undefined;
+
+      if (dup.duplicate) {
+        forensicDetails.push(`⚠️ Hash SHA-256 identik dengan berkas pada laporan ${dup.caseId}. Indikasi daur ulang bukti.`);
+        abuseFlags.push(`Bukti duplikat (hash sama dengan ${dup.caseId})`);
+      }
+
+      if (pFile.forensicStatus === 'Manipulated') {
+        verificationStatus = 'Tervalidasi Palsu / Ditolak';
+        verificationNote = 'Sistem menolak validasi otomatis: berkas terindikasi sintesis AI / kanvas generator. Satgas tetap dapat meninjau ulang.';
+        abuseFlags.push(`Bukti "${pFile.file.name}" ditandai Manipulated — tidak otomatis valid`);
+      } else if (pFile.forensicStatus === 'Needs Review') {
+        abuseFlags.push(`Bukti "${pFile.file.name}" menunggu tinjauan manual (tanpa EXIF kamera)`);
+      }
+
       evidences.push({
         evidenceId: `EVD-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
         fileName: pFile.cleanFile.name,
@@ -392,9 +455,10 @@ export default function ReportPage() {
         exifStripped: pFile.exifStripped,
         sha256: pFile.sha256,
         forensicStatus: pFile.forensicStatus,
-        forensicDetails: pFile.forensicDetails,
+        forensicDetails,
         reporterNote: pFile.reporterNote || undefined,
-        verificationStatus: 'Belum Diverifikasi',
+        verificationStatus,
+        verificationNote,
       });
     }
 
@@ -420,6 +484,7 @@ export default function ReportPage() {
       status: 'Laporan Diterima',
       receivedAt: nowIso,
       isAnonymous: true,
+      abuseFlags: abuseFlags.length > 0 ? Array.from(new Set(abuseFlags)) : undefined,
       auditLogs: [
         {
           id: `AL-${Date.now()}`,
@@ -427,6 +492,16 @@ export default function ReportPage() {
           actor: 'Sistem',
           timestamp: nowIso,
         },
+        ...(abuseFlags.length > 0
+          ? [
+              {
+                id: `AL-${Date.now()}-risk`,
+                action: `Defense-in-Depth: ${abuseFlags.join(' | ')}`,
+                actor: 'Sistem' as const,
+                timestamp: nowIso,
+              },
+            ]
+          : []),
       ],
       messages: [],
     };
@@ -436,6 +511,11 @@ export default function ReportPage() {
       const existing: Report[] = savedStr ? JSON.parse(savedStr) : [];
       existing.unshift(newReport);
       localStorage.setItem('aman_kampus_reports', JSON.stringify(existing));
+      recordSubmission();
+      recordEvidenceHashes(
+        caseId,
+        evidences.map((ev) => ev.sha256)
+      );
     } catch (e) {
       console.warn('LocalStorage quota limit reached, saving report without heavy dataUrl to ensure entry in admin...', e);
       try {
@@ -450,6 +530,11 @@ export default function ReportPage() {
         const existing: Report[] = savedStr ? JSON.parse(savedStr) : [];
         existing.unshift(lightReport);
         localStorage.setItem('aman_kampus_reports', JSON.stringify(existing));
+        recordSubmission();
+        recordEvidenceHashes(
+          caseId,
+          evidences.map((ev) => ev.sha256)
+        );
       } catch (err2) {
         console.error('Final fallback failed', err2);
       }
@@ -464,7 +549,7 @@ export default function ReportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-900 dark:text-slate-100 font-sans selection:bg-teal-500/20">
+    <div className="min-h-screen bg-transparent text-stone-800 dark:text-stone-100 font-sans selection:bg-teal-500/20">
 
       {/* ── MAIN CONTENT ──────────────────────────────────────────────────── */}
       <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-20 relative z-10">
@@ -476,10 +561,10 @@ export default function ReportPage() {
               <Lock className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
               <span className="text-xs font-bold text-teal-800 dark:text-teal-300 tracking-wide uppercase">Enkripsi End-to-End & Forensik SHA-256</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-stone-800 dark:text-stone-50 tracking-tight">
               Formulir Pelaporan Anonim
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
+            <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 max-w-lg mx-auto leading-relaxed">
               Identitas Anda dijamin anonim 100%. Metadata lokasi GPS dibersihkan dan bukti disandikan dengan kriptografi mutlak.
             </p>
           </div>
@@ -515,8 +600,8 @@ export default function ReportPage() {
               </div>
 
               {/* TOKEN DISPLAY CARDS */}
-              <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+              <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-5 rounded-2xl border border-stone-300 dark:border-stone-600">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white dark:bg-slate-900 rounded-xl border border-stone-300 dark:border-stone-600">
                   <div>
                     <p className="text-[10px] text-slate-400 uppercase font-semibold">Case ID (Internal Satgas)</p>
                     <p className="font-mono text-base font-bold text-slate-900 dark:text-white">{resultCaseId}</p>
@@ -573,7 +658,7 @@ export default function ReportPage() {
           </motion.div>
         ) : (
           /* ── FORM STEPS ─────────────────────────────────────────────────── */
-          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          <div className="bg-[#f4f4f4] dark:bg-stone-700 backdrop-blur-xl border border-stone-300 dark:border-stone-600 rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
             
             <StepIndicator current={step} />
 
@@ -585,23 +670,23 @@ export default function ReportPage() {
                 {step === 1 && (
                   <motion.div key="step1" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="space-y-5">
                     <div className="space-y-1">
-                      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                      <h2 className="text-xl font-bold text-stone-800 dark:text-stone-100 flex items-center gap-2">
                         <FileText className="w-5 h-5 text-teal-600 dark:text-teal-400" /> Informasi Kejadian
                       </h2>
-                      <p className="text-slate-600 dark:text-slate-400 text-sm">Jelaskan indikasi dugaan pelanggaran secara objektif.</p>
+                      <p className="text-stone-600 dark:text-stone-300 text-sm">Jelaskan indikasi dugaan pelanggaran secara objektif.</p>
                     </div>
 
                     {/* Kategori */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-stone-700 dark:text-stone-200 uppercase tracking-wider">
                         Kategori Kasus <span className="text-rose-500">*</span>
                       </label>
                       <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className={`w-full bg-slate-50 dark:bg-slate-950 border ${
-                          errors.category ? 'border-rose-500' : 'border-slate-200 dark:border-slate-800'
-                        } rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 font-medium transition-all`}
+                        className={`w-full bg-white dark:bg-stone-800 border ${
+                          errors.category ? 'border-rose-500' : 'border-stone-300 dark:border-stone-600'
+                        } rounded-xl px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all`}
                       >
                         <option value="">-- Pilih Kategori Kasus --</option>
                         <option value="Kekerasan Seksual & Pelecehan">Kekerasan Seksual & Pelecehan</option>
@@ -615,7 +700,7 @@ export default function ReportPage() {
 
                     {/* Waktu Kejadian */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-stone-700 dark:text-stone-200 uppercase tracking-wider">
                         Waktu Kejadian <span className="text-rose-500">*</span>
                       </label>
                       <input
@@ -623,9 +708,9 @@ export default function ReportPage() {
                         placeholder="Contoh: 12 Agustus 2026 sekitar pukul 14.00 WIB"
                         value={incidentTime}
                         onChange={(e) => setIncidentTime(e.target.value)}
-                        className={`w-full bg-slate-50 dark:bg-slate-950 border ${
-                          errors.incidentTime ? 'border-rose-500' : 'border-slate-200 dark:border-slate-800'
-                        } rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 font-medium transition-all`}
+                        className={`w-full bg-white dark:bg-stone-800 border ${
+                          errors.incidentTime ? 'border-rose-500' : 'border-stone-300 dark:border-stone-600'
+                        } rounded-xl px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all`}
                       />
                       {errors.incidentTime && <p className="text-xs text-rose-500 font-medium">{errors.incidentTime}</p>}
                     </div>
@@ -633,30 +718,30 @@ export default function ReportPage() {
                     {/* Pihak Terlibat & Fakultas (Opsional) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Pihak Terlibat (Opsional)</label>
+                        <label className="text-xs font-bold text-stone-700 dark:text-stone-200 uppercase tracking-wider">Pihak Terlibat (Opsional)</label>
                         <input
                           type="text"
                           placeholder="Contoh: Mahasiswa X / Oknum Y"
                           value={involvedParties}
                           onChange={(e) => setInvolvedParties(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 font-medium transition-all"
+                          className="w-full bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Lingkup / Fakultas (Opsional)</label>
+                        <label className="text-xs font-bold text-stone-700 dark:text-stone-200 uppercase tracking-wider">Lingkup / Fakultas (Opsional)</label>
                         <input
                           type="text"
                           placeholder="Contoh: Fakultas Ilmu Komputer"
                           value={targetFaculty}
                           onChange={(e) => setTargetFaculty(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 font-medium transition-all"
+                          className="w-full bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all"
                         />
                       </div>
                     </div>
 
                     {/* Kronologi */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-stone-700 dark:text-stone-200 uppercase tracking-wider">
                         Kronologi Kejadian <span className="text-rose-500">*</span>
                       </label>
                       <textarea
@@ -664,9 +749,9 @@ export default function ReportPage() {
                         placeholder="Tuliskan urutan kejadian secara jelas dan rinci..."
                         value={chronology}
                         onChange={(e) => setChronology(e.target.value)}
-                        className={`w-full bg-slate-50 dark:bg-slate-950 border ${
-                          errors.chronology ? 'border-rose-500' : 'border-slate-200 dark:border-slate-800'
-                        } rounded-xl p-4 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 font-medium transition-all leading-relaxed`}
+                        className={`w-full bg-white dark:bg-stone-800 border ${
+                          errors.chronology ? 'border-rose-500' : 'border-stone-300 dark:border-stone-600'
+                        } rounded-xl p-4 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all leading-relaxed`}
                       />
                       {errors.chronology && <p className="text-xs text-rose-500 font-medium">{errors.chronology}</p>}
                     </div>
@@ -749,11 +834,11 @@ export default function ReportPage() {
                     {/* PROCESSED EVIDENCES LIST WITH TEXTBOX NOTE FOR REASON/CONTEXT */}
                     {pendingFiles.length > 0 && (
                       <div className="space-y-4">
-                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        <p className="text-xs font-bold text-stone-700 dark:text-stone-200 uppercase tracking-wider">
                           Berkas Terverifikasi Kriptografi ({pendingFiles.length} file)
                         </p>
                         {pendingFiles.map((pFile, i) => (
-                          <div key={i} className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-xs">
+                          <div key={i} className="bg-slate-50 dark:bg-slate-950 border border-stone-300 dark:border-stone-600 rounded-2xl p-5 space-y-4 shadow-xs">
                             <div className="flex items-center justify-between relative">
                               <div className="min-w-0 pr-8">
                                 <p className="text-sm text-slate-800 dark:text-slate-200 font-semibold truncate">{pFile.cleanFile.name}</p>
@@ -782,19 +867,57 @@ export default function ReportPage() {
                               ))}
                             </div>
 
+                            {/* PROMINENT NOTIFICATION ALERT FOR AI / ANOMALY DETECTED */}
+                            {pFile.forensicStatus !== 'Original' && (
+                              <div className="p-3.5 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/80 rounded-xl text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5 shadow-xs">
+                                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                <div className="space-y-1">
+                                  <p className="font-bold text-xs">⚠️ TERDETEKSI REKAYASA AI / DENGAN CATATAN KHUSUS</p>
+                                  <p className="text-[11px] leading-relaxed">
+                                    Berkas ini terindikasi buatan/rekayasa AI atau tanpa EXIF kamera asli. <strong>Laporan tidak dapat dikirim sebelum Anda mengisi alasan/penjelasan berkas ini (minimal 5 karakter)</strong> pada kolom di bawah.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
                             {/* TEXTBOX: Catatan & Alasan Tambahan Pelapor untuk Bukti ini */}
                             <div className="space-y-1.5 pt-1">
-                              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                <MessageSquare className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                                <span>Catatan / Alasan Bukti (Opsional / Klarifikasi Rekayasa):</span>
+                              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                                <span className="flex items-center gap-1.5">
+                                  <MessageSquare className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                                  <span>
+                                    {pFile.forensicStatus === 'Original'
+                                      ? 'Catatan / Alasan Bukti (Opsional):'
+                                      : 'Catatan / Alasan Wajib (min. 5 karakter) — jelaskan asal berkas ini:'}
+                                  </span>
+                                </span>
+                                {pFile.forensicStatus !== 'Original' && (
+                                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Wajib Alasan</span>
+                                )}
                               </label>
                               <textarea
                                 rows={2}
                                 value={pFile.reporterNote}
                                 onChange={(e) => updateFileNote(i, e.target.value)}
-                                placeholder="Misal: 'Gambar ini adalah screenshot chat WhatsApp' atau 'Teks nama telah disamarkan'."
-                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-teal-500 font-medium transition-all"
+                                placeholder={
+                                  pFile.forensicStatus === 'Original'
+                                    ? 'Misal: "Tangkapan layar percakapan"'
+                                    : 'Berikan alasan/penjelasan berkas ini (minimal 5 karakter)...'
+                                }
+                                className={`w-full bg-white dark:bg-slate-900 border rounded-xl p-3 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none font-medium transition-all ${
+                                  pFile.forensicStatus !== 'Original' && pFile.reporterNote.trim().length < 5
+                                    ? 'border-rose-400 dark:border-rose-600 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                                    : 'border-stone-300 dark:border-stone-600 focus:border-teal-500'
+                                }`}
                               />
+                              {pFile.forensicStatus !== 'Original' && (
+                                <div className="flex items-center justify-between text-[11px] font-medium pt-0.5">
+                                  <span className={pFile.reporterNote.trim().length >= 5 ? 'text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1' : 'text-rose-600 dark:text-rose-400 font-bold'}>
+                                    {pFile.reporterNote.trim().length >= 5 ? '✓ Alasan sudah terisi (minimal 5 karakter)' : `* Wajib isi alasan (tersisa ${Math.max(0, 5 - pFile.reporterNote.trim().length)} karakter lagi)`}
+                                  </span>
+                                  <span className="text-slate-400 font-mono text-[10px]">{pFile.reporterNote.trim().length}/5 min</span>
+                                </div>
+                              )}
                             </div>
 
                           </div>
@@ -803,7 +926,7 @@ export default function ReportPage() {
                     )}
 
                     <div className="pt-4 flex items-center justify-between">
-                      <button type="button" onClick={goPrev} className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm transition-colors cursor-pointer">
+                      <button type="button" onClick={goPrev} className="px-5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm transition-colors cursor-pointer">
                         Kembali
                       </button>
                       <button type="button" onClick={goNext} className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-7 py-2.5 rounded-xl transition-all text-sm cursor-pointer shadow-md">
@@ -826,11 +949,11 @@ export default function ReportPage() {
                     <div className="space-y-4">
                       {/* Grid for Kategori & Waktu Kejadian */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-1">
+                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-1">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Kategori Kasus</p>
                           <p className="text-sm font-bold text-teal-700 dark:text-teal-300">{category || '-'}</p>
                         </div>
-                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-1">
+                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-1">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Waktu Kejadian</p>
                           <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{incidentTime || '-'}</p>
                         </div>
@@ -838,18 +961,18 @@ export default function ReportPage() {
 
                       {/* Grid for Pihak Terlibat & Lingkup / Fakultas */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-1">
+                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-1">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Pihak Terlibat</p>
                           <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{involvedParties || 'Tidak disebutkan (Rahasia)'}</p>
                         </div>
-                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-1">
+                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-1">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Lingkup / Fakultas</p>
                           <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{targetFaculty || 'Tidak disebutkan'}</p>
                         </div>
                       </div>
 
                       {/* Kronologi Kejadian */}
-                      <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
+                      <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-2">
                         <div className="flex items-center justify-between">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Kronologi Kejadian</p>
                           <button type="button" onClick={() => setStep(1)} className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-semibold cursor-pointer">
@@ -860,7 +983,7 @@ export default function ReportPage() {
                       </div>
 
                       {/* Lampiran Bukti & Status Forensik */}
-                      <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
+                      <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                             <Paperclip className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
@@ -876,7 +999,7 @@ export default function ReportPage() {
                         ) : (
                           <div className="space-y-2.5">
                             {pendingFiles.map((pFile, idx) => (
-                              <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 space-y-2 text-xs">
+                              <div key={idx} className="bg-white dark:bg-slate-900 border border-stone-300 dark:border-stone-600 rounded-xl p-3.5 space-y-2 text-xs">
                                 <div className="flex items-center justify-between gap-2">
                                   <span className="font-bold text-slate-800 dark:text-slate-200 truncate">{pFile.cleanFile.name}</span>
                                   <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 shrink-0">{formatBytes(pFile.cleanFile.size)}</span>
@@ -888,8 +1011,14 @@ export default function ReportPage() {
                                   <span className="bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                                     EXIF Cleared
                                   </span>
-                                  <span className="bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
-                                    {pFile.forensicStatus}
+                                  <span className={`px-2 py-0.5 rounded border font-bold ${
+                                    pFile.forensicStatus === 'Manipulated'
+                                      ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+                                      : pFile.forensicStatus === 'Needs Review'
+                                      ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                                      : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                  }`}>
+                                    {pFile.forensicStatus === 'Original' ? 'Original' : pFile.forensicStatus === 'Manipulated' ? 'Tidak otomatis valid' : 'Perlu tinjauan'}
                                   </span>
                                 </div>
                                 {pFile.reporterNote && (
@@ -930,7 +1059,7 @@ export default function ReportPage() {
                             value={userAnswer}
                             onChange={(e) => setUserAnswer(e.target.value)}
                             placeholder="Jawaban..."
-                            className="w-32 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:border-teal-500 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 font-semibold"
+                            className="w-32 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:border-teal-500 rounded-xl px-3 py-2 text-sm text-stone-800 dark:text-stone-100 font-semibold"
                           />
                         </div>
                         {spamError && (
@@ -942,7 +1071,7 @@ export default function ReportPage() {
                     </div>
 
                     <div className="pt-4 flex items-center justify-between">
-                      <button type="button" onClick={goPrev} className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm transition-colors cursor-pointer">
+                      <button type="button" onClick={goPrev} className="px-5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm transition-colors cursor-pointer">
                         Kembali
                       </button>
                       <button type="button" onClick={handleSubmit} className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-8 py-3 rounded-xl transition-all text-base cursor-pointer shadow-lg shadow-teal-600/30 flex items-center gap-2">
