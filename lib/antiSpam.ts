@@ -64,17 +64,17 @@ export function assessChronologyQuality(chronology: string): AntiSpamCheckResult
   const cleaned = chronology.replace(/\s+/g, ' ').trim();
   const words = cleaned.split(' ').filter(Boolean);
 
-  if (cleaned.length < 80) {
+  if (cleaned.length < 20) {
     return {
       allowed: false,
-      message: 'Kronologi terlalu singkat. Jelaskan kejadian secara konkret (minimal sekitar 80 karakter) agar laporan tidak disalahgunakan untuk tuduhan kosong.',
+      message: 'Kronologi terlalu singkat. Jelaskan kejadian secara konkret (minimal 20 karakter) agar laporan tidak disalahgunakan untuk tuduhan kosong.',
     };
   }
 
-  if (words.length < 12) {
+  if (words.length < 4) {
     return {
       allowed: false,
-      message: 'Kronologi perlu lebih rinci (minimal 12 kata) mencakup apa yang terjadi, kapan, dan mengapa ini pelanggaran — bukan sekadar tuduhan nama.',
+      message: 'Kronologi perlu lebih rinci (minimal 4 kata) mencakup apa yang terjadi, kapan, dan mengapa ini pelanggaran — bukan sekadar tuduhan nama.',
     };
   }
 
