@@ -43,6 +43,16 @@
   outline-offset: 2px;
 }
 
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
 /* Light mode gentle contrast adjustments for small text */
 html:not(.dark) .text-slate-400 {
   color: #bdbdbd; /* slate-500 */

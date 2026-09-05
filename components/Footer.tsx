@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Shield, Activity, FileText, Code, AlertCircle } from 'lucide-react';
+import { Activity, FileText, Code, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -12,12 +13,18 @@ export default function Footer() {
     return null;
   }
   return (
-    <footer className="border-t border-slate-200 bg-white pt-16 pb-10 relative z-10 w-full">
+    <footer className="border-t border-slate-200 bg-white pt-16 pb-10 w-full">
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-16 mb-12">
         <div className="col-span-1 md:col-span-2 space-y-5">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-teal-600 rounded-xl flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0">
+              <Image
+                src="/images/logo.png"
+                alt="AmanKampus Logo"
+                width={36}
+                height={36}
+                className="w-full h-full object-cover"
+              />
             </div>
             <span className="text-xl font-bold tracking-tight text-slate-900">AmanKampus</span>
           </div>

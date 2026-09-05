@@ -181,7 +181,7 @@ export default function TrackPage() {
                 setTokenInput(e.target.value);
                 if (searchStatus === 'error' || searchStatus === 'notFound') setSearchStatus('idle');
               }}
-              className="flex-1 bg-transparent border-none focus:outline-none text-slate-900 dark:text-slate-100 font-mono placeholder:font-sans placeholder:text-slate-400 px-3 py-3.5"
+              className="flex-1 bg-transparent border-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 text-slate-900 dark:text-slate-100 font-mono placeholder:font-sans placeholder:text-slate-400 px-3 py-3.5"
               required
             />
           </div>

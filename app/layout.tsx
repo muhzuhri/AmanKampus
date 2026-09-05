@@ -37,7 +37,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 
           <Navbar />
           <CommandPalette />
-          <div className="flex-1 relative z-10">
+          <div className="flex-1">
             {children}
           </div>
           <Footer />

@@ -33,16 +33,24 @@ export default function EducationPage() {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
-  // Close modal on ESC key
+  // Close modal on ESC key & disable background scroll
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setSelectedArticle(null);
       }
     };
+    if (selectedArticle) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedArticle]);
 
   const toggleFaq = (idx: number) => {
     setOpenFaqIndex(openFaqIndex === idx ? null : idx);
@@ -317,23 +325,25 @@ export default function EducationPage() {
       {/* ─── ARTICLE DETAIL MODAL ──────────────────────────────────────────────── */}
       <AnimatePresence>
         {selectedArticle && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-            {/* Backdrop */}
+          <>
+            {/* Backdrop — covers full screen */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedArticle(null)}
-              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
+              className="fixed inset-0 z-150 bg-slate-950/80 backdrop-blur-md"
             />
 
-            {/* Modal Dialog Card */}
+            {/* Modal wrapper — fixed, starts below navbar, above footer */}
+            <div className="fixed inset-x-3 bottom-3 z-200 flex items-end justify-center sm:inset-x-4 sm:bottom-4 sm:items-center sm:top-20">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              exit={{ opacity: 0, scale: 0.96, y: 30 }}
               transition={{ duration: 0.25 }}
-              className="relative w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden z-10 max-h-[88vh] flex flex-col"
+              className="relative w-full max-w-3xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl z-10 flex flex-col"
+              style={{ maxHeight: 'calc(100vh - 88px)' }}
             >
               {/* Modal Header Bar */}
               <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4 bg-slate-50 dark:bg-slate-950">
@@ -440,7 +450,8 @@ export default function EducationPage() {
               </div>
 
             </motion.div>
-          </div>
+            </div>
+          </>
         )}
       </AnimatePresence>
 

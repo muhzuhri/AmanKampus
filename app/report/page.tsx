@@ -818,23 +818,89 @@ export default function ReportPage() {
                   <motion.div key="step3" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="space-y-6 relative z-10">
                     <div className="space-y-1">
                       <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
-                        <Eye className="w-5 h-5 text-teal-600 dark:text-teal-400" /> Periksa Ulang & Verifikasi Anti-Bot
+                        <Eye className="w-5 h-5 text-teal-600 dark:text-teal-400" /> Ringkasan Laporan & Verifikasi Anti-Bot
                       </h2>
-                      <p className="text-slate-600 dark:text-slate-400 text-sm">Pastikan informasi di bawah sudah benar sebelum mengirimkan laporan.</p>
+                      <p className="text-slate-600 dark:text-slate-400 text-sm">Pastikan seluruh data laporan dan berkas bukti di bawah ini sudah lengkap dan sesuai sebelum dikirim.</p>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-1">
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Kategori</p>
-                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{category}</p>
+                    <div className="space-y-4">
+                      {/* Grid for Kategori & Waktu Kejadian */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-1">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Kategori Kasus</p>
+                          <p className="text-sm font-bold text-teal-700 dark:text-teal-300">{category || '-'}</p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-1">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Waktu Kejadian</p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{incidentTime || '-'}</p>
+                        </div>
                       </div>
-                      <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-1">
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Waktu Kejadian</p>
-                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{incidentTime}</p>
+
+                      {/* Grid for Pihak Terlibat & Lingkup / Fakultas */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-1">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Pihak Terlibat</p>
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{involvedParties || 'Tidak disebutkan (Rahasia)'}</p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-1">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Lingkup / Fakultas</p>
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{targetFaculty || 'Tidak disebutkan'}</p>
+                        </div>
                       </div>
+
+                      {/* Kronologi Kejadian */}
                       <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Kronologi Kejadian</p>
-                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{chronology}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Kronologi Kejadian</p>
+                          <button type="button" onClick={() => setStep(1)} className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-semibold cursor-pointer">
+                            Ubah
+                          </button>
+                        </div>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-medium">{chronology}</p>
+                      </div>
+
+                      {/* Lampiran Bukti & Status Forensik */}
+                      <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <Paperclip className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                            <span>Lampiran Bukti & Kriptografi ({pendingFiles.length} file)</span>
+                          </p>
+                          <button type="button" onClick={() => setStep(2)} className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-semibold cursor-pointer">
+                            {pendingFiles.length > 0 ? 'Kelola Bukti' : 'Tambah Bukti'}
+                          </button>
+                        </div>
+
+                        {pendingFiles.length === 0 ? (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 italic">Tidak ada berkas bukti diunggah. Laporan akan diproses berdasarkan kronologi tertulis.</p>
+                        ) : (
+                          <div className="space-y-2.5">
+                            {pendingFiles.map((pFile, idx) => (
+                              <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 space-y-2 text-xs">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-bold text-slate-800 dark:text-slate-200 truncate">{pFile.cleanFile.name}</span>
+                                  <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 shrink-0">{formatBytes(pFile.cleanFile.size)}</span>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap text-[10px] font-mono">
+                                  <span className="bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded border border-teal-200 dark:border-teal-800 font-bold">
+                                    SHA-256: {pFile.sha256.substring(0, 14)}...
+                                  </span>
+                                  <span className="bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                                    EXIF Cleared
+                                  </span>
+                                  <span className="bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
+                                    {pFile.forensicStatus}
+                                  </span>
+                                </div>
+                                {pFile.reporterNote && (
+                                  <p className="text-[11px] text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-100 dark:border-slate-800 italic">
+                                    Catatan: &quot;{pFile.reporterNote}&quot;
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       {/* Anti-Spam Human Verification Challenge (Feature 3) */}
