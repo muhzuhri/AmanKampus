@@ -47,12 +47,12 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 h-18 flex items-center justify-between py-4">
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 group-hover:opacity-90 transition-opacity">
+          <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 group-hover:opacity-90 transition-opacity">
             <Image
-              src="/images/logo.png"
+              src="/images/logok.png"
               alt="AmanKampus Logo"
-              width={36}
-              height={36}
+              width={48}
+              height={48}
               className="w-full h-full object-cover"
             />
           </div>
