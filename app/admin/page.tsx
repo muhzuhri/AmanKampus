@@ -369,7 +369,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-transparent text-stone-900 dark:text-stone-100 font-sans selection:bg-teal-500/20">
 
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-stone-900/90 dark:bg-[#1a3330] backdrop-blur-md border-b border-stone-800 dark:border-teal-900 shadow-md text-white">
+      <header className="sticky top-0 z-40 bg-teal-900 dark:bg-stone-900 backdrop-blur-md border-b border-stone-800 dark:border-teal-900 shadow-md text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between py-4">
           <div className="flex items-center gap-4">
             <Link href="/" className="p-2 -ml-1 rounded-lg hover:bg-stone-800 dark:hover:bg-stone-800 transition-colors text-stone-300 hover:text-white">

@@ -378,12 +378,6 @@ export default function SupportPage() {
 
                 <div className="pt-2 space-y-2">
                   <a
-                    href={`tel:${contact.phone.replace(/[^0-9]/g, '')}`}
-                    className="w-full bg-stone-900 dark:bg-white text-white dark:text-stone-900 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-stone-800 dark:hover:bg-stone-100 transition-colors shadow-xs"
-                  >
-                    <PhoneCall className="w-3.5 h-3.5" /> Panggil: {contact.phone}
-                  </a>
-                  <a
                     href={contact.waLink}
                     target="_blank"
                     rel="noreferrer"

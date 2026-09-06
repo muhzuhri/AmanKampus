@@ -13,7 +13,7 @@ export default function Footer() {
     return null;
   }
   return (
-    <footer className="relative z-10 border-t border-stone-800 dark:border-teal-800 bg-stone-900 dark:bg-[#1a3330] pt-16 pb-10 w-full text-stone-300">
+    <footer className="relative z-10 border-t border-stone-800 dark:border-teal-800 bg-teal-950 dark:bg-stone-900 pt-16 pb-10 w-full text-stone-300">
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-16 mb-12">
         <div className="col-span-1 md:col-span-2 space-y-5">
           <div className="flex items-center gap-3">
@@ -55,7 +55,8 @@ export default function Footer() {
             <li><Link href="/" className="hover:text-teal-400 transition-colors font-medium">Beranda Sistem</Link></li>
             <li><Link href="/report" className="hover:text-teal-400 transition-colors font-medium">Buat Laporan</Link></li>
             <li><Link href="/track" className="hover:text-teal-400 transition-colors font-medium">Tracker Anonim</Link></li>
-            <li><a href="#" className="hover:text-teal-400 transition-colors font-medium">Transparansi Open Source</a></li>
+            <li><Link href="/support" className="hover:text-teal-400 transition-colors font-medium">Bantuan & PFA</Link></li>
+            <li><Link href="/education" className="hover:text-teal-400 transition-colors font-medium">Edukasi</Link></li>
           </ul>
         </div>
 
@@ -71,16 +72,7 @@ export default function Footer() {
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 pt-6 border-t border-stone-800 dark:border-stone-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-stone-400 font-medium">
         <p>© 2026 AmanKampus Initiative. All data remains client-owned.</p>
-        <div className="flex items-center gap-4">
-          <a href="#" className="flex items-center gap-1.5 hover:text-stone-200 dark:hover:text-stone-200 transition-colors">
-            <Code className="w-3.5 h-3.5" />
-            Source Code
-          </a>
-          <button className="flex items-center gap-1.5 text-rose-400 hover:text-rose-300 transition-colors px-3 py-1.5 rounded-full bg-rose-950/60 border border-rose-800">
-            <AlertCircle className="w-3.5 h-3.5" />
-            Tutup Tab Darurat
-          </button>
-        </div>
+        
       </div>
     </footer>
   );

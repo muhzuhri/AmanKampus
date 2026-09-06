@@ -718,7 +718,7 @@ export default function ReportPage() {
                     {/* Pihak Terlibat & Fakultas (Opsional) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-stone-700 dark:text-stone-200 uppercase tracking-wider">Pihak Terlibat (Opsional)</label>
+                        <label className="text-xs font-bold text-stone-700 dark:text-stone-200 uppercase tracking-wider">Pihak / Oknum Terlibat (Opsional)</label>
                         <input
                           type="text"
                           placeholder="Contoh: Mahasiswa X / Oknum Y"

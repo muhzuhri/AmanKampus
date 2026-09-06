@@ -39,7 +39,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 bg-stone-900/90 dark:bg-[#1a3330] backdrop-blur-md transition-colors ${
+      className={`fixed top-0 inset-x-0 z-50 bg-teal-900 dark:bg-stone-900 backdrop-blur-md transition-colors ${
         isScrolled
           ? 'border-b border-stone-800 dark:border-teal-900 shadow-md'
           : 'border-b border-stone-800/80 dark:border-teal-800/80'
