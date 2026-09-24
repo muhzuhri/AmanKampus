@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 export default function IntroAnimation() {
   const pathname = usePathname();
   const [phase, setPhase] = useState<'idle' | 'center' | 'fly' | 'done'>('idle');
+  const [targetPos, setTargetPos] = useState({ x: -160, y: -300, scale: 0.16 });
 
   useEffect(() => {
     // Only run on the homepage
@@ -15,14 +16,25 @@ export default function IntroAnimation() {
       setPhase('done');
       return;
     }
+
+    // Calculate exact GPU-friendly pixel offset to navbar logo (top-left)
+    const updateTarget = () => {
+      const isMobile = window.innerWidth < 768;
+      // Target top-left navbar logo center offset relative to screen center
+      const navX = isMobile ? -window.innerWidth / 2 + 36 : -window.innerWidth / 2 + 100;
+      const navY = -window.innerHeight / 2 + 36;
+      // Logo in hero is ~176px (w-44), target in nav is ~48px
+      const scale = isMobile ? 44 / 176 : 48 / 176;
+
+      setTargetPos({ x: navX, y: navY, scale });
+    };
+
+    updateTarget();
     setPhase('center');
 
-    // After holding center → fly to navbar
+    // Timers
     const flyTimer = setTimeout(() => setPhase('fly'), 1400);
-    // After fly → remove overlay entirely
-    const doneTimer = setTimeout(() => {
-      setPhase('done');
-    }, 2800);
+    const doneTimer = setTimeout(() => setPhase('done'), 2700);
 
     return () => {
       clearTimeout(flyTimer);
@@ -35,81 +47,79 @@ export default function IntroAnimation() {
   return (
     <AnimatePresence>
       {(phase === 'center' || phase === 'fly') && (
-        /* ── Full-screen dark teal overlay ── */
         <motion.div
           key="intro-overlay"
-          className="fixed inset-0 z-9999 flex items-center justify-center overflow-hidden"
-          style={{ backgroundColor: '#061f1d' }}
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden pointer-events-none"
+          style={{
+            backgroundColor: '#061f1d',
+            willChange: 'opacity',
+          }}
           initial={{ opacity: 1 }}
           animate={{ opacity: phase === 'fly' ? 0 : 1 }}
-          transition={{ duration: 1.1, ease: 'easeInOut', delay: phase === 'fly' ? 0.6 : 0 }}
+          transition={{ duration: 0.9, ease: 'easeInOut', delay: phase === 'fly' ? 0.4 : 0 }}
         >
-          {/* ── Subtle radial glow behind logo ── */}
+          {/* Subtle glow (optimised blur for mobile GPU) */}
           <motion.div
             className="absolute inset-0 pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: phase === 'center' ? 1 : 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.6 }}
             style={{
               background:
-                'radial-gradient(ellipse 55% 40% at 50% 50%, rgba(20,184,166,0.18) 0%, transparent 70%)',
+                'radial-gradient(circle at 50% 50%, rgba(20,184,166,0.15) 0%, transparent 65%)',
             }}
           />
 
-          {/* ── Animated ring pulse ── */}
+          {/* Pulsing rings — only render in center phase to free GPU */}
           {phase === 'center' && (
             <>
               <motion.div
                 className="absolute rounded-full border border-teal-500/20"
                 initial={{ scale: 0.6, opacity: 0.6 }}
-                animate={{ scale: 2.4, opacity: 0 }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
-                style={{ width: 180, height: 180 }}
+                animate={{ scale: 2.2, opacity: 0 }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
+                style={{ width: 176, height: 176, willChange: 'transform, opacity' }}
               />
               <motion.div
                 className="absolute rounded-full border border-teal-400/15"
                 initial={{ scale: 0.6, opacity: 0.4 }}
-                animate={{ scale: 2.8, opacity: 0 }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut', delay: 0.4 }}
-                style={{ width: 180, height: 180 }}
+                animate={{ scale: 2.6, opacity: 0 }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut', delay: 0.3 }}
+                style={{ width: 176, height: 176, willChange: 'transform, opacity' }}
               />
             </>
           )}
 
-          {/* ── Central Logo Block ── */}
+          {/* Central Animated Logo Container */}
           <motion.div
-            className="flex flex-col items-center gap-5 select-none"
-            initial={{ scale: 1, opacity: 0, y: 0 }}
+            className="flex flex-col items-center gap-4 select-none"
+            style={{
+              willChange: 'transform, opacity',
+              transform: 'translateZ(0)', // Force Hardware Acceleration (GPU layer)
+            }}
+            initial={{ scale: 1, opacity: 0, x: 0, y: 0 }}
             animate={
               phase === 'center'
-                ? { scale: 1, opacity: 1, y: 0 }
+                ? { scale: 1, opacity: 1, x: 0, y: 0 }
                 : {
-                    /* Fly toward top-left navbar position.
-                       translateX/Y nudge the element toward the top-left corner.
-                       Scale collapses from hero size down to navbar-icon size. */
-                    scale: 0.13,
+                    scale: targetPos.scale,
                     opacity: 0,
-                    x: 'calc(-42vw + 24px)',
-                    y: 'calc(-44vh + 18px)',
+                    x: targetPos.x,
+                    y: targetPos.y,
                   }
             }
             transition={
               phase === 'center'
-                ? { duration: 0.7, ease: [0.22, 1, 0.36, 1] }
-                : { duration: 0.85, ease: [0.76, 0, 0.24, 1] }
+                ? { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+                : { duration: 0.75, ease: [0.4, 0, 0.2, 1] } // Smooth hardware-accelerated Bezier curve
             }
           >
-            {/* Shield logo */}
-            <motion.div
-              className="relative"
-              animate={phase === 'center' ? { y: [0, -8, 0] } : {}}
-              transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              {/* Glow ring */}
-              <div className="absolute inset-0 rounded-2xl bg-teal-400/10 blur-2xl scale-125" />
+            {/* Shield Logo */}
+            <div className="relative">
+              {/* Lighter glow shadow for 60fps mobile rendering */}
               <div
-                className="relative w-44 h-44 rounded-2xl overflow-hidden border-2 border-teal-700/60 shadow-2xl"
-                style={{ boxShadow: '0 0 60px rgba(20,184,166,0.25), 0 0 120px rgba(20,184,166,0.1)' }}
+                className="relative w-44 h-44 rounded-2xl overflow-hidden border-2 border-teal-700/60 shadow-lg"
+                style={{ boxShadow: '0 8px 32px rgba(20,184,166,0.3)' }}
               >
                 <Image
                   src="/images/logii.png"
@@ -119,24 +129,23 @@ export default function IntroAnimation() {
                   priority
                 />
               </div>
-            </motion.div>
+            </div>
 
-            {/* Brand name */}
+            {/* Brand Text */}
             <motion.div
-              className="flex flex-col items-center gap-1"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: phase === 'center' ? 1 : 0, y: phase === 'center' ? 0 : 12 }}
-              transition={{ duration: 0.75, delay: 0.25 }}
+              className="flex flex-col items-center"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: phase === 'center' ? 1 : 0, y: phase === 'center' ? 0 : 10 }}
+              transition={{ duration: 0.5, delay: phase === 'center' ? 0.2 : 0 }}
             >
               <span
                 className="text-4xl font-extrabold tracking-tight text-white"
-                style={{ textShadow: '0 0 40px rgba(20,184,166,0.5)' }}
+                style={{ textShadow: '0 2px 12px rgba(20,184,166,0.4)' }}
               >
                 AmanKampus
               </span>
             </motion.div>
           </motion.div>
-
         </motion.div>
       )}
     </AnimatePresence>
