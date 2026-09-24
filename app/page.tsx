@@ -32,9 +32,9 @@ export default function LandingPage() {
           <ViolationsCatalogSection />
         </motion.div>
 
-        <motion.div {...sectionAnimation}>
+        {/* <motion.div {...sectionAnimation}>
           <TrustAndSecuritySection />
-        </motion.div>
+        </motion.div> */}
 
         <motion.div {...sectionAnimation}>
           <PipelineRoadmapSection />

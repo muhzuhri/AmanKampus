@@ -94,7 +94,7 @@ export default function Navbar() {
           {mounted && (
             <button
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className="p-2 rounded-xl border border-stone-700 dark:border-stone-600 bg-stone-800 hover:bg-stone-700 dark:bg-[#163432] dark:hover:bg-stone-900 text-stone-200 dark:text-stone-200 hover:text-teal-400 transition-colors cursor-pointer"
+              className="p-2 rounded-xl border border-stone-700 dark:border-stone-600 bg-[#163432] hover:bg-stone-700 dark:bg-[#163432] dark:hover:bg-stone-900 text-stone-200 dark:text-stone-200 hover:text-teal-400 transition-colors cursor-pointer"
               aria-label="Toggle theme"
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
@@ -111,10 +111,10 @@ export default function Navbar() {
             onClick={() => {
               document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
             }}
-            className="flex items-center gap-2.5 text-xs font-semibold bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 hover:text-white rounded-xl px-3.5 py-2 transition-colors dark:bg-[#163432] dark:hover:bg-stone-900 dark:border-stone-600 dark:text-stone-200 cursor-pointer"
+            className="flex items-center gap-2.5 text-xs font-semibold bg-[#163432] hover:bg-stone-700 border border-stone-700 text-stone-200 hover:text-white rounded-xl px-3.5 py-2 transition-colors dark:bg-[#163432] dark:hover:bg-stone-900 dark:border-stone-600 dark:text-stone-200 cursor-pointer"
           >
             <span>Pusat Perintah</span>
-            <span className="flex items-center gap-0.5 border border-stone-600 dark:border-stone-600 rounded-md bg-stone-900 dark:bg-stone-900 px-1.5 py-0.5 font-sans text-stone-200 dark:text-stone-200 font-bold text-[11px]">
+            <span className="flex items-center gap-0.5 border border-stone-600 dark:border-stone-600 rounded-md bg-[#163432] dark:bg-stone-900 px-1.5 py-0.5 font-sans text-stone-200 dark:text-stone-200 font-bold text-[11px]">
               <span>⌘</span>K
             </span>
           </button>
