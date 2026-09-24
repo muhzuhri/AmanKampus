@@ -19,7 +19,7 @@ export default function Footer() {
           <div className="flex items-center gap-2">
             <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
               <Image
-                src="/images/logokk.png"
+                src="/images/logii.png"
                 alt="AmanKampus Logo"
                 width={36}
                 height={36}

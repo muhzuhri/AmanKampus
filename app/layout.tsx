@@ -22,6 +22,7 @@ import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { CommandPalette } from "@/components/CommandPalette";
 import PageBackdrop from "@/components/PageBackdrop";
+import IntroAnimation from "@/components/IntroAnimation";
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     >
       <body className="min-h-full flex flex-col bg-[#ececec] text-teal-950 dark:bg-[#0c2b29] dark:text-stone-100 relative" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+          <IntroAnimation />
           <PageBackdrop />
 
           <Navbar />

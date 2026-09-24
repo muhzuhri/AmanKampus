@@ -49,7 +49,7 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-1 group">
           <div className="w-13 h-12 rounded-xl overflow-hidden shrink-0 group-hover:opacity-90 transition-opacity">
             <Image
-              src="/images/logokk.png"
+              src="/images/logii.png"
               alt="AmanKampus Logo"
               width={48}
               height={48}
