@@ -36,7 +36,7 @@ export default function TrackPage() {
     const trimmed = tokenInput.trim().toUpperCase();
     if (!trimmed) return;
 
-    if (!trimmed.startsWith('AK-')) {
+    if (trimmed.length < 3) {
       setSearchStatus('error');
       setFoundReport(null);
       return;
@@ -148,7 +148,7 @@ export default function TrackPage() {
           </div>
           <h2 className="text-3xl font-bold text-stone-900 dark:text-stone-50">Lacak Progres Secara Aman</h2>
           <p className="text-stone-600 dark:text-stone-400 max-w-lg mx-auto text-sm">
-            Masukkan Token Pelacakan Anonim Anda. Sistem kami akan mencari status terbaru tanpa meminta identitas, nama, atau kredensial login.
+            Masukkan Token Pelacakan Anonim atau Case ID Anda. Sistem kami akan mencari status terbaru tanpa meminta identitas, nama, atau kredensial login.
           </p>
         </motion.div>
 
@@ -163,7 +163,7 @@ export default function TrackPage() {
             <Search className="w-5 h-5 text-stone-400 shrink-0" />
             <input
               type="text"
-              placeholder="Contoh: AK-2026-X9K2P"
+              placeholder="Contoh: AK-2026-X9K2P atau CASE-2026-00001"
               value={tokenInput}
               onChange={(e) => {
                 setTokenInput(e.target.value);
@@ -184,7 +184,7 @@ export default function TrackPage() {
 
         {searchStatus === 'error' && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="text-rose-600 dark:text-rose-400 text-sm text-center mt-4 flex items-center justify-center gap-2 font-medium">
-            <AlertCircle className="w-4 h-4" /> Format token tidak valid. Harus dimulai dengan "AK-".
+            <AlertCircle className="w-4 h-4" /> Format Token atau Case ID tidak valid.
           </motion.div>
         )}
 
@@ -197,8 +197,8 @@ export default function TrackPage() {
                 className="bg-white/80 dark:bg-[#163432] backdrop-blur-xl border border-stone-200 dark:border-teal-900 border-dashed rounded-2xl p-8 text-center max-w-xl mx-auto"
               >
                 <div className="text-stone-300 dark:text-stone-700 mb-4 flex justify-center"><Clock className="w-10 h-10" /></div>
-                <h4 className="font-semibold text-stone-700 dark:text-stone-300 mb-2">Menunggu Token</h4>
-                <p className="text-stone-400 text-sm">Masukan token Anda di area pencarian atas untuk melacak perkembangan penanganan kasus Anda.</p>
+                <h4 className="font-semibold text-stone-700 dark:text-stone-300 mb-2">Menunggu Input Token / Case ID</h4>
+                <p className="text-stone-400 text-sm">Masukkan Token atau Case ID Anda di area pencarian di atas untuk melacak perkembangan penanganan kasus Anda.</p>
               </motion.div>
             )}
 
@@ -210,9 +210,9 @@ export default function TrackPage() {
                 <div className="w-12 h-12 bg-rose-50 dark:bg-rose-950/60 rounded-full flex items-center justify-center mx-auto text-rose-500">
                   <AlertCircle className="w-6 h-6" />
                 </div>
-                <h4 className="font-bold text-stone-900 dark:text-stone-50 text-lg">Token Tidak Ditemukan</h4>
+                <h4 className="font-bold text-stone-900 dark:text-stone-50 text-lg">Laporan Tidak Ditemukan</h4>
                 <p className="text-stone-600 dark:text-stone-400 text-sm leading-relaxed">
-                  Token <code className="text-rose-600 dark:text-rose-400 font-mono font-bold bg-rose-50 dark:bg-rose-950 px-2 py-0.5 rounded">{tokenInput.toUpperCase()}</code> tidak terdaftar pada sistem AmanKampus. Silakan periksa kembali penulisan token atau buat laporan baru.
+                  Token / Case ID <code className="text-rose-600 dark:text-rose-400 font-mono font-bold bg-rose-50 dark:bg-rose-950 px-2 py-0.5 rounded">{tokenInput.toUpperCase()}</code> tidak terdaftar pada sistem AmanKampus. Silakan periksa kembali penulisan Token / Case ID atau buat laporan baru.
                 </p>
               </motion.div>
             )}

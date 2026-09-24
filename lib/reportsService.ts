@@ -13,6 +13,33 @@ export function getSupabaseConfig() {
   return { url, key, isConfigured };
 }
 
+// Fetch helper with AbortController timeout to prevent long hanging requests
+async function fetchWithTimeout(resource: string, options: RequestInit = {}, timeoutMs: number = 8000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(resource, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Shared headers for all Supabase REST calls
+function supabaseHeaders(key: string): Record<string, string> {
+  return {
+    'apikey': key,
+    'Authorization': `Bearer ${key}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    // Tell PostgREST to skip response content-negotiation overhead
+    'Accept-Profile': 'public',
+  };
+}
+
 // Transform DB JSON row to frontend Report object
 function dbRowToReport(row: any): Report {
   return {
@@ -54,6 +81,37 @@ function reportToDbRow(report: Report) {
 }
 
 /**
+ * Helper: Ambil laporan lokal dari LocalStorage.
+ * Hanya memuat MOCK_REPORTS jika includeMocks === true (misal saat offline/fallback).
+ */
+export function getLocalReports(includeMocks: boolean = false): Report[] {
+  let localReports: Report[] = [];
+  if (typeof window !== 'undefined') {
+    const savedStr = localStorage.getItem('aman_kampus_reports');
+    if (savedStr) {
+      try {
+        const parsed = JSON.parse(savedStr);
+        if (Array.isArray(parsed)) localReports = parsed;
+      } catch (e) {
+        console.warn('Failed to parse local reports:', e);
+      }
+    }
+  }
+
+  const reportMap = new Map<string, Report>();
+  if (includeMocks) {
+    MOCK_REPORTS.forEach((r) => reportMap.set(r.caseId, r));
+  }
+  localReports.forEach((r) => {
+    if (r.caseId && r.anonymousToken) reportMap.set(r.caseId, r);
+  });
+
+  return Array.from(reportMap.values()).sort(
+    (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+  );
+}
+
+/**
  * 1. Simpan Laporan Baru ke Supabase & LocalStorage
  */
 export async function saveReportToDatabase(report: Report): Promise<{ success: boolean; error?: string }> {
@@ -77,7 +135,7 @@ export async function saveReportToDatabase(report: Report): Promise<{ success: b
   }
 
   try {
-    const response = await fetch(`${url}/rest/v1/reports`, {
+    const response = await fetchWithTimeout(`${url}/rest/v1/reports`, {
       method: 'POST',
       headers: {
         'apikey': key,
@@ -86,7 +144,7 @@ export async function saveReportToDatabase(report: Report): Promise<{ success: b
         'Prefer': 'return=representation',
       },
       body: JSON.stringify(reportToDbRow(report)),
-    });
+    }, 4000);
 
     if (!response.ok) {
       const errText = await response.text();
@@ -102,59 +160,109 @@ export async function saveReportToDatabase(report: Report): Promise<{ success: b
 }
 
 /**
- * 2. Ambil Semua Laporan untuk Dasbor Admin (Murni dari Supabase bila terkonfigurasi)
+ * 2. Ambil Semua Laporan untuk Dasbor Admin (Murni dari Supabase bila terisi, fallback ke Local/Sample agar tidak pernah kosong)
  */
 export async function fetchReportsFromDatabase(): Promise<Report[]> {
   const { url, key, isConfigured } = getSupabaseConfig();
 
   if (isConfigured) {
     try {
-      const response = await fetch(`${url}/rest/v1/reports?select=*&order=received_at.desc`, {
-        method: 'GET',
-        headers: {
-          'apikey': key,
-          'Authorization': `Bearer ${key}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetchWithTimeout(
+        `${url}/rest/v1/reports?select=*&order=received_at.desc`,
+        { method: 'GET', headers: supabaseHeaders(key) },
+        8000
+      );
 
       if (response.ok) {
         const rows = await response.json();
-        if (Array.isArray(rows)) {
-          // Apabila Supabase terkonfigurasi, kembalikan 100% data dari Supabase DB
+        if (Array.isArray(rows) && rows.length > 0) {
           return rows.map(dbRowToReport);
         }
+        // Tabel masih kosong — kembalikan array kosong (bukan mock)
+        return [];
       } else {
-        console.warn('Supabase fetch error:', await response.text());
+        console.warn('Supabase fetch error:', response.status, response.statusText);
       }
     } catch (err) {
-      console.warn('Koneksi ke Supabase gagal, beralih ke LocalStorage fallback:', err);
+      console.warn('Koneksi ke Supabase lambat/gagal:', err);
     }
   }
 
-  // Fallback HANYA bila Supabase belum dikonfigurasi atau tidak terhubung
-  let localReports: Report[] = [];
-  if (typeof window !== 'undefined') {
-    const savedStr = localStorage.getItem('aman_kampus_reports');
-    if (savedStr) {
-      try {
-        const parsed = JSON.parse(savedStr);
-        if (Array.isArray(parsed)) localReports = parsed;
-      } catch (e) {
-        console.warn('Failed to parse local reports:', e);
-      }
-    }
+  // Fallback bila Supabase belum dikonfigurasi atau bermasalah
+  return getLocalReports(false);
+}
+
+/**
+ * Single-request replacement for Promise.all([checkSupabaseStatus(), fetchReportsFromDatabase()]).
+ * Melakukan SATU HTTP request ke Supabase dan mengembalikan data sekaligus status koneksi DB.
+ * Ini mengeliminasi request duplikat checkSupabaseStatus() yang sebelumnya selalu dijalankan paralel.
+ */
+export async function fetchReportsWithStatus(): Promise<{
+  reports: Report[];
+  status: SupabaseStatusInfo;
+}> {
+  const { url, key, isConfigured } = getSupabaseConfig();
+
+  if (!isConfigured) {
+    return {
+      reports: getLocalReports(false),
+      status: {
+        isConfigured: false,
+        connected: false,
+        count: 0,
+        url,
+        error: 'URL / Anon Key Supabase belum dikonfigurasi di .env.local',
+      },
+    };
   }
 
-  const reportMap = new Map<string, Report>();
-  MOCK_REPORTS.forEach((r) => reportMap.set(r.caseId, r));
-  localReports.forEach((r) => {
-    if (r.caseId && r.anonymousToken) reportMap.set(r.caseId, r);
-  });
+  try {
+    const response = await fetchWithTimeout(
+      `${url}/rest/v1/reports?select=*&order=received_at.desc`,
+      { method: 'GET', headers: supabaseHeaders(key) },
+      8000
+    );
 
-  return Array.from(reportMap.values()).sort(
-    (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
-  );
+    if (!response.ok) {
+      const errText = await response.text();
+      return {
+        reports: getLocalReports(false),
+        status: {
+          isConfigured: true,
+          connected: false,
+          count: 0,
+          url,
+          error: `Supabase error (${response.status}): ${errText}`,
+        },
+      };
+    }
+
+    const rows = await response.json();
+    const reports = Array.isArray(rows) ? rows.map(dbRowToReport) : [];
+    return {
+      reports,
+      status: {
+        isConfigured: true,
+        connected: true,
+        count: reports.length,
+        url,
+      },
+    };
+  } catch (err: any) {
+    const isTimeout = err?.name === 'AbortError';
+    return {
+      reports: getLocalReports(false),
+      status: {
+        isConfigured: true,
+        connected: false,
+        count: 0,
+        url,
+        error: isTimeout
+          ? 'Koneksi ke Supabase timeout (>8s)'
+          : err?.message || 'Gagal terhubung ke jaringan Supabase',
+      },
+    };
+  }
 }
 
 /**
@@ -181,14 +289,14 @@ export async function checkSupabaseStatus(): Promise<SupabaseStatusInfo> {
   }
 
   try {
-    const response = await fetch(`${url}/rest/v1/reports?select=case_id`, {
+    const response = await fetchWithTimeout(`${url}/rest/v1/reports?select=case_id`, {
       method: 'GET',
       headers: {
         'apikey': key,
         'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json',
       },
-    });
+    }, 3000);
 
     if (!response.ok) {
       const errText = await response.text();
@@ -215,7 +323,7 @@ export async function checkSupabaseStatus(): Promise<SupabaseStatusInfo> {
       connected: false,
       count: 0,
       url,
-      error: err?.message || 'Gagal terhubung ke jaringan Supabase',
+      error: err?.name === 'AbortError' ? 'Koneksi ke Supabase timeout (>3s)' : (err?.message || 'Gagal terhubung ke jaringan Supabase'),
     };
   }
 }
@@ -229,7 +337,7 @@ export async function seedMockReportsToSupabase(reportsToSeed: Report[] = MOCK_R
 
   try {
     const rows = reportsToSeed.map(reportToDbRow);
-    const response = await fetch(`${url}/rest/v1/reports`, {
+    const response = await fetchWithTimeout(`${url}/rest/v1/reports`, {
       method: 'POST',
       headers: {
         'apikey': key,
@@ -238,7 +346,7 @@ export async function seedMockReportsToSupabase(reportsToSeed: Report[] = MOCK_R
         'Prefer': 'resolution=ignore-duplicates,return=representation',
       },
       body: JSON.stringify(rows),
-    });
+    }, 5000);
 
     if (!response.ok) {
       const errText = await response.text();
@@ -252,18 +360,17 @@ export async function seedMockReportsToSupabase(reportsToSeed: Report[] = MOCK_R
   }
 }
 
-
 /**
- * 4. Ambil Laporan Tunggal berdasarkan Token Anonim (untuk /track)
+ * 4. Ambil Laporan Tunggal berdasarkan Token Anonim ATAU Case ID (untuk /track) — Respons Instan & Fleksibel
  */
-export async function fetchReportByTokenFromDatabase(token: string): Promise<Report | null> {
-  const cleanToken = token.trim().toUpperCase();
+export async function fetchReportByTokenFromDatabase(tokenOrCaseId: string): Promise<Report | null> {
+  const cleanInput = tokenOrCaseId.trim().toUpperCase();
   const { url, key, isConfigured } = getSupabaseConfig();
 
   if (isConfigured) {
     try {
-      const response = await fetch(
-        `${url}/rest/v1/reports?anonymous_token=eq.${encodeURIComponent(cleanToken)}&select=*`,
+      const response = await fetchWithTimeout(
+        `${url}/rest/v1/reports?or=(anonymous_token.ilike.${encodeURIComponent(cleanInput)},case_id.ilike.${encodeURIComponent(cleanInput)})&select=*`,
         {
           method: 'GET',
           headers: {
@@ -271,7 +378,8 @@ export async function fetchReportByTokenFromDatabase(token: string): Promise<Rep
             'Authorization': `Bearer ${key}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
+        3000
       );
 
       if (response.ok) {
@@ -281,24 +389,17 @@ export async function fetchReportByTokenFromDatabase(token: string): Promise<Rep
         }
       }
     } catch (err) {
-      console.warn('Supabase fetch single report failed, checking local:', err);
+      console.warn('Supabase fetch single report timed out, checking local:', err);
     }
   }
 
-  // Fallback to local storage & mock reports
-  if (typeof window !== 'undefined') {
-    const savedStr = localStorage.getItem('aman_kampus_reports');
-    if (savedStr) {
-      try {
-        const parsed: Report[] = JSON.parse(savedStr);
-        const match = parsed.find((r) => r.anonymousToken.toUpperCase() === cleanToken);
-        if (match) return match;
-      } catch (e) {}
-    }
-  }
+  // Fallback pencarian di local storage & mock reports berdasarkan Token ATAU Case ID
+  const localReports = getLocalReports(true);
+  const localMatch = localReports.find(
+    (r) => r.anonymousToken.toUpperCase() === cleanInput || r.caseId.toUpperCase() === cleanInput
+  );
 
-  const mockMatch = MOCK_REPORTS.find((r) => r.anonymousToken.toUpperCase() === cleanToken);
-  return mockMatch || null;
+  return localMatch || null;
 }
 
 /**
@@ -336,7 +437,7 @@ export async function updateReportInDatabase(
     if (updatedFields.auditLogs !== undefined) patchBody.audit_logs = updatedFields.auditLogs;
     if (updatedFields.abuseFlags !== undefined) patchBody.abuse_flags = updatedFields.abuseFlags;
 
-    const response = await fetch(`${url}/rest/v1/reports?case_id=eq.${encodeURIComponent(caseId)}`, {
+    const response = await fetchWithTimeout(`${url}/rest/v1/reports?case_id=eq.${encodeURIComponent(caseId)}`, {
       method: 'PATCH',
       headers: {
         'apikey': key,
@@ -345,7 +446,7 @@ export async function updateReportInDatabase(
         'Prefer': 'return=representation',
       },
       body: JSON.stringify(patchBody),
-    });
+    }, 4000);
 
     if (!response.ok) {
       const errText = await response.text();
@@ -357,5 +458,56 @@ export async function updateReportInDatabase(
   } catch (err: any) {
     console.error('Error update DB:', err);
     return { success: false, error: err?.message || 'Error update database' };
+  }
+}
+
+/**
+ * 6. Hapus Laporan dari Supabase & LocalStorage
+ */
+export async function deleteReportFromDatabase(
+  caseId: string
+): Promise<{ success: boolean; error?: string }> {
+  // Hapus dari localStorage terlebih dahulu
+  if (typeof window !== 'undefined') {
+    try {
+      const savedStr = localStorage.getItem('aman_kampus_reports');
+      if (savedStr) {
+        const reports: Report[] = JSON.parse(savedStr);
+        const filtered = reports.filter((r) => r.caseId !== caseId);
+        localStorage.setItem('aman_kampus_reports', JSON.stringify(filtered));
+      }
+    } catch (e) {
+      console.warn('LocalStorage delete failed:', e);
+    }
+  }
+
+  const { url, key, isConfigured } = getSupabaseConfig();
+  if (!isConfigured) {
+    return { success: true };
+  }
+
+  try {
+    const response = await fetchWithTimeout(
+      `${url}/rest/v1/reports?case_id=eq.${encodeURIComponent(caseId)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          ...supabaseHeaders(key),
+          'Prefer': 'return=minimal',
+        },
+      },
+      6000
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Gagal menghapus dari Supabase:', errText);
+      return { success: false, error: errText };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error delete DB:', err);
+    return { success: false, error: err?.message || 'Error menghapus dari database' };
   }
 }

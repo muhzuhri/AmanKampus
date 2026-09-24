@@ -23,11 +23,16 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     setMounted(true);
-    if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
-      router.replace('/admin');
-    } else {
-      setIsCheckingAuth(false);
+    try {
+      if (typeof window !== 'undefined' && sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+        router.replace('/admin');
+        const timer = setTimeout(() => setIsCheckingAuth(false), 500);
+        return () => clearTimeout(timer);
+      }
+    } catch (e) {
+      console.warn('Storage check exception:', e);
     }
+    setIsCheckingAuth(false);
   }, [router]);
 
   const isDark = resolvedTheme === 'dark';
