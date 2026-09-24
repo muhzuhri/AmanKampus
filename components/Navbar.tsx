@@ -39,17 +39,17 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 bg-teal-900 dark:bg-stone-900 backdrop-blur-md transition-colors ${
+      className={`fixed top-0 inset-x-0 z-50 bg-teal-900 dark:bg-mauve-900 backdrop-blur-md transition-colors ${
         isScrolled
           ? 'border-b border-stone-800 dark:border-teal-900 shadow-md'
           : 'border-b border-stone-800/80 dark:border-teal-800/80'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 h-18 flex items-center justify-between py-4">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 group-hover:opacity-90 transition-opacity">
+        <Link href="/" className="flex items-center gap-1 group">
+          <div className="w-13 h-12 rounded-xl overflow-hidden shrink-0 group-hover:opacity-90 transition-opacity">
             <Image
-              src="/images/logok.png"
+              src="/images/logokk.png"
               alt="AmanKampus Logo"
               width={48}
               height={48}
@@ -94,7 +94,7 @@ export default function Navbar() {
           {mounted && (
             <button
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className="p-2 rounded-xl border border-stone-700 dark:border-stone-600 bg-stone-800 hover:bg-stone-700 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-200 dark:text-stone-200 hover:text-teal-400 transition-colors cursor-pointer"
+              className="p-2 rounded-xl border border-stone-700 dark:border-stone-600 bg-stone-800 hover:bg-stone-700 dark:bg-[#163432] dark:hover:bg-stone-900 text-stone-200 dark:text-stone-200 hover:text-teal-400 transition-colors cursor-pointer"
               aria-label="Toggle theme"
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
@@ -111,7 +111,7 @@ export default function Navbar() {
             onClick={() => {
               document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
             }}
-            className="flex items-center gap-2.5 text-xs font-semibold bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 hover:text-white rounded-xl px-3.5 py-2 transition-colors dark:bg-stone-700 dark:hover:bg-stone-600 dark:border-stone-600 dark:text-stone-200 cursor-pointer"
+            className="flex items-center gap-2.5 text-xs font-semibold bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 hover:text-white rounded-xl px-3.5 py-2 transition-colors dark:bg-[#163432] dark:hover:bg-stone-900 dark:border-stone-600 dark:text-stone-200 cursor-pointer"
           >
             <span>Pusat Perintah</span>
             <span className="flex items-center gap-0.5 border border-stone-600 dark:border-stone-600 rounded-md bg-stone-900 dark:bg-stone-900 px-1.5 py-0.5 font-sans text-stone-200 dark:text-stone-200 font-bold text-[11px]">
@@ -150,7 +150,7 @@ export default function Navbar() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden overflow-hidden bg-[#e4e4e4] dark:bg-[#1a3330] border-b border-stone-300 dark:border-teal-800"
+            className="md:hidden overflow-hidden bg-[#e4e4e4] dark:bg-[#0c2b29] border-b border-stone-300 dark:border-teal-900/60"
           >
             <div className="px-6 py-5 space-y-2 flex flex-col">
               {navLinks.map((link) => (

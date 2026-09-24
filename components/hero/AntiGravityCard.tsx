@@ -27,7 +27,7 @@ export default function AntiGravityCard() {
       className="relative z-10 w-full"
     >
       <div
-        className="relative rounded-2xl border border-stone-300 dark:border-stone-600 bg-[#f7f7f7] dark:bg-stone-800 p-6 sm:p-8 shadow-2xl space-y-6 overflow-hidden"
+        className="relative rounded-2xl border border-stone-300 dark:border-teal-900 bg-[#f7f7f7] dark:bg-[#163432] p-6 sm:p-8 shadow-2xl space-y-6 overflow-hidden"
         style={{ transformStyle: 'preserve-3d' }}
       >
         {/* Subtle background gradient highlight */}

@@ -65,7 +65,7 @@ export default function EducationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-stone-900 dark:text-stone-100 font-sans selection:bg-teal-500/20 pt-24 pb-20">
+    <div className="min-h-screen bg-transparent text-stone-900 dark:text-stone-100 font-sans selection:bg-[#163432] pt-24 pb-20">
       <main className="max-w-6xl mx-auto px-4 sm:px-6 space-y-16 relative z-10">
         {/* Hero Banner */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
@@ -106,9 +106,9 @@ export default function EducationPage() {
                 transition={{ duration: 0.3, delay: i * 0.08 }}
                 className="relative group"
               >
-                <div className="absolute -left-[21px] md:-left-[29px] top-5 w-3.5 h-3.5 rounded-full bg-stone-300 dark:bg-stone-700 border-2 border-white dark:border-stone-950 group-hover:bg-teal-500 group-hover:scale-125 transition-all duration-300" />
+                <div className="absolute -left-[21px] md:-left-[29px] top-5 w-3.5 h-3.5 rounded-full bg-stone-300 dark:bg-[#163432] border-2 border-white dark:border-stone-950 group-hover:bg-teal-500 group-hover:scale-125 transition-all duration-300" />
 
-                <div className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600/80 rounded-2xl p-5 md:p-6 space-y-3 shadow-xs hover:border-teal-500/50 hover:shadow-md transition-all">
+                <div className="bg-white/90 dark:bg-[#163432] backdrop-blur-xl border border-stone-200 dark:border-stone-600/80 rounded-2xl p-5 md:p-6 space-y-3 shadow-xs hover:border-teal-500/50 hover:shadow-md transition-all">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-xs font-bold text-stone-500 dark:text-stone-400">
@@ -163,7 +163,7 @@ export default function EducationPage() {
         </div>
 
         {/* HAK-HAK KORBAN & JAMINAN PERLINDUNGAN */}
-        <div className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div className="bg-white/90 dark:bg-[#163432] backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
           <div className="space-y-1">
             <h2 className="text-2xl font-extrabold text-stone-900 dark:text-stone-50 flex items-center gap-2.5">
               <ShieldCheck className="w-6 h-6 text-teal-600 dark:text-teal-400" />{" "}
@@ -216,7 +216,7 @@ export default function EducationPage() {
               return (
                 <div
                   key={idx}
-                  className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-2xl overflow-hidden shadow-xs"
+                  className="bg-white/90 dark:bg-[#163432] backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-2xl overflow-hidden shadow-xs"
                 >
                   <button
                     type="button"
@@ -275,10 +275,10 @@ export default function EducationPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.35, delay: idx * 0.06 }}
                 onClick={() => setSelectedArticle(art)}
-                className="group bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl hover:border-teal-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                className="group bg-white/90 dark:bg-[#163432] backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl hover:border-teal-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between"
               >
                 {/* Compact Thumbnail Image Header (h-28 sm:h-32) */}
-                <div className="relative h-28 sm:h-32 w-full overflow-hidden bg-stone-100 dark:bg-stone-700">
+                <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-stone-100 dark:bg-[#163432]">
                   <Image
                     src={art.image}
                     alt={art.title}

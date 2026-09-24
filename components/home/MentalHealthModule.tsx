@@ -177,7 +177,7 @@ export default function MentalHealthModule() {
       className="max-w-3xl mx-auto text-center space-y-8 py-6 home-block"
     >
       <div className="space-y-3">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-stone-200 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-semibold uppercase tracking-widest">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-stone-200 dark:border-stone-600 bg-white dark:bg-[#163432] text-stone-700 dark:text-stone-300 text-xs font-semibold uppercase tracking-widest">
           <HeartPulse className="w-4 h-4" />
           <span>Modul Pertolongan Pertama Emosional</span>
         </div>
@@ -187,7 +187,7 @@ export default function MentalHealthModule() {
         </p>
       </div>
 
-      <div className="relative bg-[#f4f4f4] dark:bg-stone-700 rounded-2xl border border-stone-300 dark:border-stone-600 p-8 sm:p-12 shadow-sm space-y-8">
+      <div className="relative bg-[#f4f4f4] dark:bg-[#163432] rounded-2xl border border-stone-300 dark:border-stone-600 p-8 sm:p-12 shadow-sm space-y-8">
 
         {/* Audio Toggle */}
         <div className="flex justify-center">

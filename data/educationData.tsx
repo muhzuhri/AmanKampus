@@ -53,7 +53,7 @@ export const ARTICLES_DATA: Article[] = [
     readTime: '6 min baca',
     date: '4 Sep 2026',
     author: 'Tim Forensik Kriptografi AmanKampus',
-    image: '/images/article_cybersecurity.png',
+    image: '/images/1.png',
     excerpt: 'Bagaimana pembersihan otomatis EXIF metadata, enkripsi SHA-256, dan Zero-Knowledge Architecture melindungi identitas pelapor secara mutlak.',
     content: [
       {
@@ -88,7 +88,7 @@ export const ARTICLES_DATA: Article[] = [
     readTime: '8 min baca',
     date: '3 Sep 2026',
     author: 'Satgas Pencegahan & Penanganan Kekerasan Seksual',
-    image: '/images/article_ppks.png',
+    image: '/images/2.png',
     excerpt: 'Langkah demi langkah dari penerimaan laporan anonim, verifikasi bukti digital, pendampingan psikologis, hingga rekomendasi sanksi etik.',
     content: [
       {
@@ -123,7 +123,7 @@ export const ARTICLES_DATA: Article[] = [
     readTime: '5 min baca',
     date: '1 Sep 2026',
     author: 'Divisi Bantuan Hukum Civitas Akademika',
-    image: '/images/article_ppks.png',
+    image: '/images/3.png',
     excerpt: 'Penjelasan komprehensif mengenai landasan hukum nasional yang menjamin kerahasiaan identitas, bantuan legal gratis, dan perlindungan retaliasi.',
     content: [
       {
@@ -158,7 +158,7 @@ export const ARTICLES_DATA: Article[] = [
     readTime: '7 min baca',
     date: '28 Agt 2026',
     author: 'Tim Psikolog Klinis PFA AmanKampus',
-    image: '/images/article_mental_health.png',
+    image: '/images/4.jpg',
     excerpt: 'Teknik praktis grounding 5-4-3-2-1, pengaturan napas diafragma, dan langkah pertolongan diri mandiri saat mengalami serangan cemas.',
     content: [
       {
@@ -195,7 +195,7 @@ export const ARTICLES_DATA: Article[] = [
     readTime: '6 min baca',
     date: '25 Agt 2026',
     author: 'Tim Siber & Privasi Komunitas AmanKampus',
-    image: '/images/article_cybersecurity.png',
+    image: '/images/5.png',
     excerpt: 'Panduan langkah demi langkah mengamankan akun sosial media, 2FA, mengunci privasi nomor telepon, dan membersihkan jejak digital.',
     content: [
       {
@@ -231,7 +231,7 @@ export const ARTICLES_DATA: Article[] = [
     readTime: '5 min baca',
     date: '20 Agt 2026',
     author: 'Pengurus Aliansi Mahasiswa Peduli Ruang Aman',
-    image: '/images/article_mental_health.png',
+    image: '/images/6.png',
     excerpt: 'Strategi 5D (Distract, Delegate, Document, Direct, Delay) untuk mengintervensi tindak pelecehan secara aman saat menjadi saksi.',
     content: [
       {

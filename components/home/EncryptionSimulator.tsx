@@ -29,7 +29,7 @@ export default function EncryptionSimulator() {
       transition={FADE_UP_TRANSITION}
       className="relative max-w-5xl mx-auto home-block"
     >
-      <div className="bg-[#f4f4f4] dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-2xl p-8 md:p-12 shadow-sm space-y-8">
+      <div className="bg-[#f4f4f4] dark:bg-[#163432] border border-stone-300 dark:border-stone-600 rounded-2xl p-8 md:p-12 shadow-sm space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <div className="w-14 h-14 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl flex items-center justify-center mx-auto">
             <ShieldCheck className="w-8 h-8 text-teal-800 dark:text-teal-400" />

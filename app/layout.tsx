@@ -30,7 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#ececec] text-stone-800 dark:bg-[#2c2926] dark:text-stone-100 relative" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col bg-[#ececec] text-teal-950 dark:bg-[#0c2b29] dark:text-stone-100 relative" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <PageBackdrop />
 

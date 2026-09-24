@@ -213,12 +213,12 @@ function BreathingWidget() {
   };
 
   return (
-    <div className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-teal-500/30 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden space-y-6">
+    <div className="bg-white/90 dark:bg-[#163432] backdrop-blur-xl border border-teal-500/30 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden space-y-6">
       
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-100 dark:border-stone-600 pb-4">
         <div>
-          <div className="inline-flex items-center gap-2 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 px-3 py-1 rounded-full text-teal-700 dark:text-teal-300 text-xs font-bold mb-1">
+          <div className="inline-flex items-center gap-2 bg-teal-50 dark:[#163432] border border-teal-200 dark:border-teal-800 px-3 py-1 rounded-full text-teal-700 dark:text-teal-300 text-xs font-bold mb-1">
             <Wind className="w-3.5 h-3.5" /> Widget Relaksasi Mandiri (4-7-8 Technique)
           </div>
           <h2 className="text-xl font-extrabold text-stone-900 dark:text-stone-50">Panduan Pernapasan Penenang Kepanikan</h2>
@@ -326,7 +326,7 @@ export default function SupportPage() {
 
         {/* Hero Banner */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 px-4 py-1.5 rounded-full text-teal-700 dark:text-teal-300 text-xs font-bold shadow-xs">
+          <div className="inline-flex items-center gap-2 bg-teal-50 dark:bg-[#163432] border border-teal-200 dark:border-teal-800 px-4 py-1.5 rounded-full text-teal-700 dark:text-teal-300 text-xs font-bold shadow-xs">
             <HeartHandshake className="w-4 h-4" /> Pusat Bantuan & Psychological First Aid (PFA)
           </div>
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-stone-900 dark:text-stone-50">
@@ -358,14 +358,14 @@ export default function SupportPage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.1 }}
-                className={`bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border ${contact.bg} rounded-3xl p-6 space-y-4 shadow-lg flex flex-col justify-between`}
+                className={`bg-white/90 dark:bg-[#163432] backdrop-blur-xl border ${contact.bg} rounded-3xl p-6 space-y-4 shadow-lg flex flex-col justify-between`}
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="p-3 bg-white dark:bg-[#14302c] rounded-2xl border border-stone-200 dark:border-stone-600 shadow-xs">
+                    <div className="p-3 bg-white dark:bg-[#163432] rounded-2xl border border-stone-200 dark:border-stone-600 shadow-xs">
                       {contact.icon}
                     </div>
-                    <span className="px-3 py-1 bg-white/80 dark:bg-[#14302c]/80 rounded-full text-[11px] font-bold text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-600">
+                    <span className="px-3 py-1 bg-white/80 dark:bg-[#163432]/80 rounded-full text-[11px] font-bold text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-600">
                       {contact.badge}
                     </span>
                   </div>
@@ -392,7 +392,7 @@ export default function SupportPage() {
         </div>
 
         {/* PANDUAN TINDAKAN CEPT (FAST EMERGENCY ACTIONS) */}
-        <div className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div className="bg-white/90 dark:bg-[#163432] backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
           <div className="space-y-1">
             <h2 className="text-2xl font-extrabold text-stone-900 dark:text-stone-50 flex items-center gap-2.5">
               <ShieldCheck className="w-6 h-6 text-teal-600 dark:text-teal-400" /> Langkah Cepat Pengamanan Diri

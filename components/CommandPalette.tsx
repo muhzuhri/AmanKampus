@@ -85,6 +85,7 @@ export function CommandPalette() {
                     >
                       <Map className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Lacak Progres Laporan
                     </Command.Item>
+
                     <Command.Item
                       onSelect={() => handleSelect(() => router.push('/support'))}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-slate-800 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"

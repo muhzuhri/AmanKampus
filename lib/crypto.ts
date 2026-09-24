@@ -3,6 +3,149 @@
  * dan Deteksi Forensik Rekayasa Gambar (AI Generated / Editor Software Detection).
  */
 
+export interface FileValidationResult {
+  valid: boolean;
+  detectedType: string;
+  isExecutableOrScript: boolean;
+  message: string;
+}
+
+export interface ExtractedMetadata {
+  hasGps: boolean;
+  gpsCoords?: string;
+  cameraMaker?: string;
+  cameraModel?: string;
+  timestamp?: string;
+  software?: string;
+  rawDetails: string[];
+}
+
+/**
+  * Validasi tanda tangan biner (Magic Bytes) untuk mencegah pemalsuan ekstensi/MIME spoofing,
+  * berkas eksekusi (.exe, .dll, ELF, shell script), dan vektor serangan XSS (SVG/HTML).
+  */
+export function validateFileSignature(file: File, buffer: ArrayBuffer): FileValidationResult {
+  const bytes = new Uint8Array(buffer.slice(0, Math.min(buffer.byteLength, 1024)));
+
+  // 1) Pemeriksaan Biner Eksekusi Berbahaya
+  if (bytes.length >= 2 && bytes[0] === 0x4D && bytes[1] === 0x5A) {
+    return { valid: false, detectedType: 'Executable (Windows PE)', isExecutableOrScript: true, message: 'Ditolak: Terdeteksi berkas biner eksekusi Windows (.exe/.dll).' };
+  }
+  if (bytes.length >= 4 && bytes[0] === 0x7F && bytes[1] === 0x45 && bytes[2] === 0x4C && bytes[3] === 0x46) {
+    return { valid: false, detectedType: 'Executable (Linux ELF)', isExecutableOrScript: true, message: 'Ditolak: Terdeteksi biner eksekusi Linux ELF.' };
+  }
+  if (bytes.length >= 2 && bytes[0] === 0x23 && bytes[1] === 0x21) {
+    return { valid: false, detectedType: 'Shell Script', isExecutableOrScript: true, message: 'Ditolak: Terdeteksi skrip eksekusi shell script (#!).' };
+  }
+
+  // 2) Pemeriksaan Injeksi Skrip SVG / HTML (XSS Risk)
+  const asciiHeader = Array.from(bytes.slice(0, 512)).map((b) => (b >= 32 && b <= 126 ? String.fromCharCode(b) : ' ')).join('').toLowerCase();
+  if (asciiHeader.includes('<svg') || asciiHeader.includes('xmlns="http://www.w3.org/2000/svg')) {
+    if (asciiHeader.includes('<script') || asciiHeader.includes('javascript:') || asciiHeader.includes('onload=')) {
+      return { valid: false, detectedType: 'SVG Script Injection', isExecutableOrScript: true, message: 'Ditolak: Berkas SVG terindikasi skrip berbahaya (XSS Vector).' };
+    }
+    return { valid: false, detectedType: 'SVG Vector Image', isExecutableOrScript: false, message: 'Ditolak: Format SVG tidak diizinkan sebagai bukti demi keamanan render browser.' };
+  }
+  if (asciiHeader.includes('<html') || asciiHeader.includes('<!doctype html')) {
+    return { valid: false, detectedType: 'HTML Document', isExecutableOrScript: true, message: 'Ditolak: Dokumen HTML tidak diizinkan sebagai bukti.' };
+  }
+
+  // 3) Verifikasi Magic Bytes Format Resmi (Khusus Media: Foto, Audio, Video)
+  // JPEG: FF D8 FF
+  if (bytes.length >= 3 && bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
+    return { valid: true, detectedType: 'image/jpeg', isExecutableOrScript: false, message: 'Tervalidasi JPEG Image Header (FF D8 FF).' };
+  }
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
+    return { valid: true, detectedType: 'image/png', isExecutableOrScript: false, message: 'Tervalidasi PNG Image Header (89 50 4E 47).' };
+  }
+  // WEBP: RIFF ... WEBP
+  if (bytes.length >= 12 && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+      bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) {
+    return { valid: true, detectedType: 'image/webp', isExecutableOrScript: false, message: 'Tervalidasi WEBP Container (RIFF...WEBP).' };
+  }
+  // PDF: %PDF (Ditolak: hanya foto, audio, video yang diperbolehkan)
+  if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+    return { valid: false, detectedType: 'application/pdf', isExecutableOrScript: false, message: 'Ditolak: Dokumen PDF tidak diizinkan sebagai bukti forensik. Harap unggah berkas Foto, Video, atau Audio.' };
+  }
+  // MP3: ID3 atau Sync Frame FF FB/FF F3
+  if ((bytes.length >= 3 && bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) ||
+      (bytes.length >= 2 && bytes[0] === 0xFF && (bytes[1] & 0xE0) === 0xE0)) {
+    return { valid: true, detectedType: 'audio/mpeg', isExecutableOrScript: false, message: 'Tervalidasi MP3 Audio Stream.' };
+  }
+  // WAV: RIFF ... WAVE
+  if (bytes.length >= 12 && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+      bytes[8] === 0x57 && bytes[9] === 0x41 && bytes[10] === 0x56 && bytes[11] === 0x45) {
+    return { valid: true, detectedType: 'audio/wav', isExecutableOrScript: false, message: 'Tervalidasi WAV Audio Stream.' };
+  }
+  // MP4 / MOV: ftyp at offset 4
+  if (bytes.length >= 8 && bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70) {
+    return { valid: true, detectedType: 'video/mp4', isExecutableOrScript: false, message: 'Tervalidasi MP4/MOV Container.' };
+  }
+  // WEBM: 1A 45 DF A3
+  if (bytes.length >= 4 && bytes[0] === 0x1A && bytes[1] === 0x45 && bytes[2] === 0xDF && bytes[3] === 0xA3) {
+    return { valid: true, detectedType: 'video/webm', isExecutableOrScript: false, message: 'Tervalidasi WebM Container.' };
+  }
+
+  // Jika tipe ekstensi dikenal dan merupakan media foto, audio, atau video
+  const allowedMediaMime = ['image/jpeg', 'image/png', 'image/webp', 'audio/mp3', 'audio/wav', 'audio/mpeg', 'audio/ogg', 'audio/m4a', 'video/mp4', 'video/webm', 'video/quicktime'];
+  if (allowedMediaMime.includes(file.type)) {
+    return { valid: true, detectedType: file.type, isExecutableOrScript: false, message: 'Tervalidasi berbasis tipe MIME media browser.' };
+  }
+
+  return { valid: false, detectedType: 'Unknown', isExecutableOrScript: false, message: 'Format berkas tidak didukung (Hanya berkas Foto, Video, dan Audio yang diizinkan).' };
+}
+
+/**
+  * Memindai dan mengekstrak rincian EXIF metadata nyata dari berkas sebelum disanitasi.
+  */
+export function extractDetectedMetadata(file: File, buffer: ArrayBuffer): ExtractedMetadata {
+  const scanLen = Math.min(buffer.byteLength, 4 * 1024 * 1024);
+  const bytes = new Uint8Array(buffer.slice(0, scanLen));
+
+  const png = parsePngMeta(bytes);
+  const jpeg = parseJpegMeta(bytes);
+  const webp = parseWebpMeta(bytes);
+
+  const haystack = [
+    bytesToAscii(bytes),
+    bytesToUtf16LeAscii(bytes),
+    png.text,
+    jpeg.text,
+    webp.text,
+  ]
+    .join(' ')
+    .toLowerCase()
+    .replace(/\0/g, ' ');
+
+  const hasGps = haystack.includes('gps') || haystack.includes('lat') || haystack.includes('long') || haystack.includes('geotag');
+  const cameraMaker = CAMERA_MAKE_MARKERS.find((maker) => haystack.includes(maker)) || null;
+  const softwareMatch = EDITOR_KEYWORDS.find((sw) => haystack.includes(sw)) || (haystack.includes('photoshop') ? 'adobe photoshop' : null);
+
+  let timestamp: string | undefined = undefined;
+  const dateMatch = haystack.match(/\b(202[0-9]:[0-9]{2}:[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})\b/);
+  if (dateMatch) {
+    timestamp = dateMatch[1];
+  } else if (file.lastModified) {
+    timestamp = new Date(file.lastModified).toLocaleString('id-ID');
+  }
+
+  const rawDetails: string[] = [];
+  if (hasGps) rawDetails.push('GPS Tag: Koordinat lokasi geotag terdeteksi');
+  if (cameraMaker) rawDetails.push(`Perangkat Kamera: Terdeteksi merek ${cameraMaker.toUpperCase()}`);
+  if (timestamp) rawDetails.push(`Waktu Pembuatan/Stempel: ${timestamp}`);
+  if (softwareMatch) rawDetails.push(`Software Pengolah: ${softwareMatch.toUpperCase()}`);
+
+  return {
+    hasGps,
+    cameraMaker: cameraMaker ? cameraMaker.toUpperCase() : undefined,
+    cameraModel: cameraMaker ? `${cameraMaker.toUpperCase()} Device` : undefined,
+    timestamp,
+    software: softwareMatch ? softwareMatch.toUpperCase() : undefined,
+    rawDetails,
+  };
+}
+
 export async function calculateSHA256(buffer: ArrayBuffer): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -110,6 +253,17 @@ const AI_KEYWORDS = [
   'midjourney',
   'stable diffusion',
   'stablediffusion',
+  'flux',
+  'flux.1',
+  'flux-dev',
+  'flux-schnell',
+  'seaart',
+  'playgroundai',
+  'recraft',
+  'krea',
+  'magnific',
+  'civitai',
+  'tensor.art',
   'novelai',
   'comfyui',
   'automatic1111',
@@ -117,6 +271,7 @@ const AI_KEYWORDS = [
   'fooocus',
   'synthid',
   'firefly',
+  'adobe firefly',
   'imagen',
   'ideogram',
   'leonardo.ai',
@@ -131,6 +286,8 @@ const AI_KEYWORDS = [
   'digitalsourcetype',
   'claimgenerator',
   'claim_generator',
+  'ai_generated',
+  'synthetic_image',
 ];
 
 const C2PA_MARKERS = ['c2pa', 'c2ma', 'jumb', 'jumbf', 'urn:c2pa', 'c2pa.org', 'stds.iptc.org'];

@@ -18,6 +18,7 @@ import {
   Paperclip,
   Check,
   Shield,
+  ShieldCheck,
   HelpCircle,
   Copy,
   Inbox,
@@ -34,6 +35,8 @@ import {
   stripExifFromImage,
   fileToArrayBuffer,
   analyzeImageForensics,
+  validateFileSignature,
+  extractDetectedMetadata,
 } from '@/lib/crypto';
 import {
   analyzeVideoForensics,
@@ -50,6 +53,7 @@ import {
   recordEvidenceHashes,
 } from '@/lib/antiSpam';
 import { type Report, type Evidence } from '@/lib/types';
+import { EvidenceSecurityPanel, type ForensicFileItem } from '@/components/EvidenceSecurityPanel';
 
 // ─── Helpers & Config ──────────────────────────────────────────────────────────
 
@@ -57,11 +61,16 @@ const ALLOWED_TYPES = [
   'image/jpeg',
   'image/png',
   'image/webp',
-  'application/pdf',
   'audio/mp3',
   'audio/wav',
   'audio/mpeg',
+  'audio/ogg',
+  'audio/m4a',
+  'audio/x-m4a',
+  'audio/aac',
   'video/mp4',
+  'video/webm',
+  'video/quicktime',
 ];
 const MAX_FILE_SIZE_MB = 50;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -174,7 +183,7 @@ const StepIndicator = ({ current }: { current: number }) => {
                 ? 'bg-teal-500 text-white shadow-xs'
                 : current === s.num
                 ? 'bg-teal-600 text-white border-2 border-teal-300 dark:border-teal-400 shadow-md'
-                : 'bg-[#eeeeee] dark:bg-stone-800 border-2 border-stone-300 dark:border-stone-600 text-stone-400'
+                : 'bg-[#eeeeee] dark:bg-[#0a2220] border-2 border-stone-300 dark:border-teal-900 text-stone-400'
             }`}
           >
             {current > s.num ? <Check className="w-5 h-5" /> : s.num}
@@ -225,16 +234,7 @@ export default function ReportPage() {
     setSpamError('');
   };
 
-  type ForensicFile = {
-    file: File;
-    cleanFile: File;
-    isLiveCapture: boolean;
-    exifStripped: boolean;
-    sha256: string;
-    forensicStatus: 'Original' | 'Needs Review' | 'Manipulated';
-    forensicDetails: string[];
-    reporterNote: string;
-  };
+  type ForensicFile = ForensicFileItem;
 
   const [pendingFiles, setPendingFiles] = useState<ForensicFile[]>([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -253,11 +253,18 @@ export default function ReportPage() {
   const validateAndAddFiles = useCallback(async (newFiles: FileList | File[], isLiveCapture: boolean = false) => {
     const errs: string[] = [];
     const valid: File[] = [];
+
     Array.from(newFiles).forEach((file) => {
-      if (!ALLOWED_TYPES.includes(file.type)) {
-        errs.push(`"${file.name}" — tipe file tidak didukung.`);
+      const isMedia =
+        file.type.startsWith('image/') ||
+        file.type.startsWith('audio/') ||
+        file.type.startsWith('video/') ||
+        /\.(png|jpe?g|webp|gif|mp3|wav|ogg|m4a|aac|flac|mp4|webm|mov|mkv)$/i.test(file.name);
+
+      if (!isMedia) {
+        errs.push(`"${file.name}" — Ditolak: Hanya berkas Foto, Video, dan Audio yang diizinkan sebagai bukti forensik.`);
       } else if (file.size > MAX_FILE_SIZE_BYTES) {
-        errs.push(`"${file.name}" — ukuran melebihi ${MAX_FILE_SIZE_MB}MB.`);
+        errs.push(`"${file.name}" — ukuran melebihi batas ${MAX_FILE_SIZE_MB}MB.`);
       } else {
         valid.push(file);
       }
@@ -271,7 +278,17 @@ export default function ReportPage() {
       for (const file of valid) {
         // Read raw buffer of ORIGINAL UNTOUCHED FILE before EXIF/metadata stripping
         const rawBuffer = await fileToArrayBuffer(file);
-        
+
+        // STEP 1: MAGIC BYTE & MIME SPOOFING VALIDATION
+        const validation = validateFileSignature(file, rawBuffer);
+        if (!validation.valid) {
+          errs.push(`"${file.name}" — ${validation.message}`);
+          continue;
+        }
+
+        // STEP 2: EXTRACT DETECTED EXIF METADATA
+        const extractedMeta = extractDetectedMetadata(file, rawBuffer);
+
         let forensic: { status: 'Original' | 'Needs Review' | 'Manipulated'; details: string[] };
         let cleanResult: { cleanFile: File; stripped: boolean };
 
@@ -287,8 +304,8 @@ export default function ReportPage() {
         }
 
         const { cleanFile, stripped } = cleanResult;
-        
-        // Cryptographic SHA-256 Hashing of clean file
+
+        // STEP 4: REAL WEB CRYPTO API SHA-256 HASHING
         const cleanBuffer = await fileToArrayBuffer(cleanFile);
         const hash = await calculateSHA256(cleanBuffer);
 
@@ -314,6 +331,8 @@ export default function ReportPage() {
           forensicStatus: status,
           forensicDetails: details,
           reporterNote: '',
+          extractedMeta,
+          validationResult: validation,
         });
       }
 
@@ -600,8 +619,8 @@ export default function ReportPage() {
               </div>
 
               {/* TOKEN DISPLAY CARDS */}
-              <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-5 rounded-2xl border border-stone-300 dark:border-stone-600">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white dark:bg-slate-900 rounded-xl border border-stone-300 dark:border-stone-600">
+              <div className="space-y-3 bg-slate-50 dark:bg-[#0a2220] p-5 rounded-2xl border border-stone-300 dark:border-teal-900">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white dark:bg-[#061e1c] rounded-xl border border-stone-300 dark:border-teal-900">
                   <div>
                     <p className="text-[10px] text-slate-400 uppercase font-semibold">Case ID (Internal Satgas)</p>
                     <p className="font-mono text-base font-bold text-slate-900 dark:text-white">{resultCaseId}</p>
@@ -658,7 +677,7 @@ export default function ReportPage() {
           </motion.div>
         ) : (
           /* ── FORM STEPS ─────────────────────────────────────────────────── */
-          <div className="bg-[#f4f4f4] dark:bg-stone-700 backdrop-blur-xl border border-stone-300 dark:border-stone-600 rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
+          <div className="bg-[#f4f4f4] dark:bg-[#163432] backdrop-blur-xl border border-stone-300 dark:border-teal-900 rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
             
             <StepIndicator current={step} />
 
@@ -684,8 +703,8 @@ export default function ReportPage() {
                       <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className={`w-full bg-white dark:bg-stone-800 border ${
-                          errors.category ? 'border-rose-500' : 'border-stone-300 dark:border-stone-600'
+                        className={`w-full bg-white dark:bg-[#0a2220] border ${
+                          errors.category ? 'border-rose-500' : 'border-stone-300 dark:border-teal-900'
                         } rounded-xl px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all`}
                       >
                         <option value="">-- Pilih Kategori Kasus --</option>
@@ -708,8 +727,8 @@ export default function ReportPage() {
                         placeholder="Contoh: 12 Agustus 2026 sekitar pukul 14.00 WIB"
                         value={incidentTime}
                         onChange={(e) => setIncidentTime(e.target.value)}
-                        className={`w-full bg-white dark:bg-stone-800 border ${
-                          errors.incidentTime ? 'border-rose-500' : 'border-stone-300 dark:border-stone-600'
+                        className={`w-full bg-white dark:bg-[#0a2220] border ${
+                          errors.incidentTime ? 'border-rose-500' : 'border-stone-300 dark:border-teal-900'
                         } rounded-xl px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all`}
                       />
                       {errors.incidentTime && <p className="text-xs text-rose-500 font-medium">{errors.incidentTime}</p>}
@@ -724,7 +743,7 @@ export default function ReportPage() {
                           placeholder="Contoh: Mahasiswa X / Oknum Y"
                           value={involvedParties}
                           onChange={(e) => setInvolvedParties(e.target.value)}
-                          className="w-full bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all"
+                          className="w-full bg-white dark:bg-[#0a2220] border border-stone-300 dark:border-teal-900 rounded-xl px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -734,7 +753,7 @@ export default function ReportPage() {
                           placeholder="Contoh: Fakultas Ilmu Komputer"
                           value={targetFaculty}
                           onChange={(e) => setTargetFaculty(e.target.value)}
-                          className="w-full bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all"
+                          className="w-full bg-white dark:bg-[#0a2220] border border-stone-300 dark:border-teal-900 rounded-xl px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all"
                         />
                       </div>
                     </div>
@@ -749,8 +768,8 @@ export default function ReportPage() {
                         placeholder="Tuliskan urutan kejadian secara jelas dan rinci..."
                         value={chronology}
                         onChange={(e) => setChronology(e.target.value)}
-                        className={`w-full bg-white dark:bg-stone-800 border ${
-                          errors.chronology ? 'border-rose-500' : 'border-stone-300 dark:border-stone-600'
+                        className={`w-full bg-white dark:bg-[#0a2220] border ${
+                          errors.chronology ? 'border-rose-500' : 'border-stone-300 dark:border-teal-900'
                         } rounded-xl p-4 text-sm text-stone-800 dark:text-stone-100 focus:outline-none focus:border-teal-500 font-medium transition-all leading-relaxed`}
                       />
                       {errors.chronology && <p className="text-xs text-rose-500 font-medium">{errors.chronology}</p>}
@@ -790,7 +809,7 @@ export default function ReportPage() {
                       className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
                         isDragOver
                           ? 'border-teal-500 bg-teal-50/50 dark:bg-teal-950/40'
-                          : 'border-slate-300 dark:border-slate-700 hover:border-teal-400 bg-slate-50/50 dark:bg-slate-950/40'
+                          : 'border-stone-300 dark:border-teal-900 hover:border-teal-400 bg-stone-50/50 dark:bg-[#0a2220]'
                       }`}
                     >
                       <input
@@ -808,7 +827,7 @@ export default function ReportPage() {
                         Klik untuk memilih berkas atau drag & drop
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Foto (JPG/PNG), Dokumen (PDF), Audio (MP3/WAV), atau Video (MP4) — Maks. {MAX_FILE_SIZE_MB}MB
+                        Foto (JPG/PNG/WEBP), Audio (MP3/WAV/OGG/M4A), atau Video (MP4/WEBM/MOV) — Maks. {MAX_FILE_SIZE_MB}MB
                       </p>
                     </div>
 
@@ -831,96 +850,23 @@ export default function ReportPage() {
                       </div>
                     )}
 
-                    {/* PROCESSED EVIDENCES LIST WITH TEXTBOX NOTE FOR REASON/CONTEXT */}
+                    {/* PROCESSED EVIDENCES LIST WITH EVIDENCE SECURITY PANEL */}
                     {pendingFiles.length > 0 && (
-                      <div className="space-y-4">
-                        <p className="text-xs font-bold text-stone-700 dark:text-stone-200 uppercase tracking-wider">
-                          Berkas Terverifikasi Kriptografi ({pendingFiles.length} file)
-                        </p>
+                      <div className="space-y-5 pt-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-bold text-stone-700 dark:text-stone-200 uppercase tracking-wider flex items-center gap-1.5">
+                            <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                            Berkas Terverifikasi Kriptografi & Magic-Bytes ({pendingFiles.length} file)
+                          </p>
+                        </div>
                         {pendingFiles.map((pFile, i) => (
-                          <div key={i} className="bg-slate-50 dark:bg-slate-950 border border-stone-300 dark:border-stone-600 rounded-2xl p-5 space-y-4 shadow-xs">
-                            <div className="flex items-center justify-between relative">
-                              <div className="min-w-0 pr-8">
-                                <p className="text-sm text-slate-800 dark:text-slate-200 font-semibold truncate">{pFile.cleanFile.name}</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">{formatBytes(pFile.cleanFile.size)} • SHA-256 Hash Generated</p>
-                              </div>
-                              <button type="button" onClick={() => removeFile(i)} className="absolute right-0 top-0 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer">
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-
-                            {/* Detailed Forensic Scan Warnings */}
-                            <div className={`p-4 rounded-xl border text-xs space-y-2 ${
-                              pFile.forensicStatus === 'Manipulated'
-                                ? 'bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-900/50 text-rose-900 dark:text-rose-200'
-                                : pFile.forensicStatus === 'Needs Review'
-                                ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-900/50 text-amber-900 dark:text-amber-200'
-                                : 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-900/50 text-emerald-900 dark:text-emerald-200'
-                            }`}>
-                              <p className="font-bold flex items-center gap-1.5 text-xs">
-                                <Shield className="w-4 h-4" /> Hasil Pemindaian Forensik Biner Asli:
-                              </p>
-                              {pFile.forensicDetails.map((det, idx) => (
-                                <p key={idx} className="text-[11px] leading-relaxed font-sans flex items-start gap-1">
-                                  <span>•</span> <span>{det}</span>
-                                </p>
-                              ))}
-                            </div>
-
-                            {/* PROMINENT NOTIFICATION ALERT FOR AI / ANOMALY DETECTED */}
-                            {pFile.forensicStatus !== 'Original' && (
-                              <div className="p-3.5 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/80 rounded-xl text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5 shadow-xs">
-                                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                                <div className="space-y-1">
-                                  <p className="font-bold text-xs">⚠️ TERDETEKSI REKAYASA AI / DENGAN CATATAN KHUSUS</p>
-                                  <p className="text-[11px] leading-relaxed">
-                                    Berkas ini terindikasi buatan/rekayasa AI atau tanpa EXIF kamera asli. <strong>Laporan tidak dapat dikirim sebelum Anda mengisi alasan/penjelasan berkas ini (minimal 5 karakter)</strong> pada kolom di bawah.
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* TEXTBOX: Catatan & Alasan Tambahan Pelapor untuk Bukti ini */}
-                            <div className="space-y-1.5 pt-1">
-                              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                                <span className="flex items-center gap-1.5">
-                                  <MessageSquare className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                                  <span>
-                                    {pFile.forensicStatus === 'Original'
-                                      ? 'Catatan / Alasan Bukti (Opsional):'
-                                      : 'Catatan / Alasan Wajib (min. 5 karakter) — jelaskan asal berkas ini:'}
-                                  </span>
-                                </span>
-                                {pFile.forensicStatus !== 'Original' && (
-                                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Wajib Alasan</span>
-                                )}
-                              </label>
-                              <textarea
-                                rows={2}
-                                value={pFile.reporterNote}
-                                onChange={(e) => updateFileNote(i, e.target.value)}
-                                placeholder={
-                                  pFile.forensicStatus === 'Original'
-                                    ? 'Misal: "Tangkapan layar percakapan"'
-                                    : 'Berikan alasan/penjelasan berkas ini (minimal 5 karakter)...'
-                                }
-                                className={`w-full bg-white dark:bg-slate-900 border rounded-xl p-3 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none font-medium transition-all ${
-                                  pFile.forensicStatus !== 'Original' && pFile.reporterNote.trim().length < 5
-                                    ? 'border-rose-400 dark:border-rose-600 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                                    : 'border-stone-300 dark:border-stone-600 focus:border-teal-500'
-                                }`}
-                              />
-                              {pFile.forensicStatus !== 'Original' && (
-                                <div className="flex items-center justify-between text-[11px] font-medium pt-0.5">
-                                  <span className={pFile.reporterNote.trim().length >= 5 ? 'text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1' : 'text-rose-600 dark:text-rose-400 font-bold'}>
-                                    {pFile.reporterNote.trim().length >= 5 ? '✓ Alasan sudah terisi (minimal 5 karakter)' : `* Wajib isi alasan (tersisa ${Math.max(0, 5 - pFile.reporterNote.trim().length)} karakter lagi)`}
-                                  </span>
-                                  <span className="text-slate-400 font-mono text-[10px]">{pFile.reporterNote.trim().length}/5 min</span>
-                                </div>
-                              )}
-                            </div>
-
-                          </div>
+                          <EvidenceSecurityPanel
+                            key={i}
+                            item={pFile}
+                            index={i}
+                            onUpdateNote={updateFileNote}
+                            onRemove={removeFile}
+                          />
                         ))}
                       </div>
                     )}
@@ -949,11 +895,11 @@ export default function ReportPage() {
                     <div className="space-y-4">
                       {/* Grid for Kategori & Waktu Kejadian */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-1">
+                        <div className="bg-stone-50 dark:bg-[#0a2220] border border-stone-300 dark:border-teal-900 rounded-xl p-4 space-y-1">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Kategori Kasus</p>
                           <p className="text-sm font-bold text-teal-700 dark:text-teal-300">{category || '-'}</p>
                         </div>
-                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-1">
+                        <div className="bg-stone-50 dark:bg-[#0a2220] border border-stone-300 dark:border-teal-900 rounded-xl p-4 space-y-1">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Waktu Kejadian</p>
                           <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{incidentTime || '-'}</p>
                         </div>
@@ -961,18 +907,18 @@ export default function ReportPage() {
 
                       {/* Grid for Pihak Terlibat & Lingkup / Fakultas */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-1">
+                        <div className="bg-stone-50 dark:bg-[#0a2220] border border-stone-300 dark:border-teal-900 rounded-xl p-4 space-y-1">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Pihak Terlibat</p>
                           <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{involvedParties || 'Tidak disebutkan (Rahasia)'}</p>
                         </div>
-                        <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-1">
+                        <div className="bg-stone-50 dark:bg-[#0a2220] border border-stone-300 dark:border-teal-900 rounded-xl p-4 space-y-1">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Lingkup / Fakultas</p>
                           <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{targetFaculty || 'Tidak disebutkan'}</p>
                         </div>
                       </div>
 
                       {/* Kronologi Kejadian */}
-                      <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-2">
+                      <div className="bg-stone-50 dark:bg-[#0a2220] border border-stone-300 dark:border-teal-900 rounded-xl p-4 space-y-2">
                         <div className="flex items-center justify-between">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Kronologi Kejadian</p>
                           <button type="button" onClick={() => setStep(1)} className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-semibold cursor-pointer">
@@ -983,7 +929,7 @@ export default function ReportPage() {
                       </div>
 
                       {/* Lampiran Bukti & Status Forensik */}
-                      <div className="bg-slate-50 dark:bg-slate-950/60 border border-stone-300 dark:border-stone-600 rounded-xl p-4 space-y-3">
+                      <div className="bg-stone-50 dark:bg-[#0a2220] border border-stone-300 dark:border-teal-900 rounded-xl p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                             <Paperclip className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
@@ -999,7 +945,7 @@ export default function ReportPage() {
                         ) : (
                           <div className="space-y-2.5">
                             {pendingFiles.map((pFile, idx) => (
-                              <div key={idx} className="bg-white dark:bg-slate-900 border border-stone-300 dark:border-stone-600 rounded-xl p-3.5 space-y-2 text-xs">
+                              <div key={idx} className="bg-white dark:bg-[#061e1c] border border-stone-300 dark:border-teal-900 rounded-xl p-3.5 space-y-2 text-xs">
                                 <div className="flex items-center justify-between gap-2">
                                   <span className="font-bold text-slate-800 dark:text-slate-200 truncate">{pFile.cleanFile.name}</span>
                                   <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 shrink-0">{formatBytes(pFile.cleanFile.size)}</span>
@@ -1051,7 +997,7 @@ export default function ReportPage() {
                           Selesaikan perhitungan berikut untuk membuktikan laporan ini dibuat oleh manusia (bukan bot otomatis):
                         </p>
                         <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-base bg-white dark:bg-slate-900 px-3.5 py-2 rounded-xl border border-teal-300 dark:border-teal-700 text-teal-900 dark:text-teal-200">
+                          <span className="font-mono font-bold text-base bg-white dark:bg-[#061e1c] px-3.5 py-2 rounded-xl border border-teal-300 dark:border-teal-700 text-teal-900 dark:text-teal-200">
                             {humanChallenge.problem}
                           </span>
                           <input
@@ -1059,7 +1005,7 @@ export default function ReportPage() {
                             value={userAnswer}
                             onChange={(e) => setUserAnswer(e.target.value)}
                             placeholder="Jawaban..."
-                            className="w-32 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:border-teal-500 rounded-xl px-3 py-2 text-sm text-stone-800 dark:text-stone-100 font-semibold"
+                            className="w-32 bg-white dark:bg-[#061e1c] border border-stone-300 dark:border-teal-900 focus:border-teal-500 rounded-xl px-3 py-2 text-sm text-stone-800 dark:text-stone-100 font-semibold"
                           />
                         </div>
                         {spamError && (

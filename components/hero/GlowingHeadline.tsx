@@ -17,7 +17,7 @@ export default function GlowingHeadline() {
       <motion.div
         variants={FADE_UP}
         transition={FADE_UP_TRANSITION}
-        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-stone-300 dark:border-stone-600 bg-[#f0f0f0] dark:bg-stone-700 text-stone-700 dark:text-stone-200 text-xs md:text-sm font-medium"
+        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-stone-300 dark:border-teal-900 bg-[#f0f0f0] dark:bg-[#163432] text-stone-700 dark:text-stone-200 text-xs md:text-sm font-medium"
       >
         <span className="inline-flex rounded-full h-2 w-2 bg-teal-700" />
         <span>Pelaporan anonim terenkripsi untuk civitas kampus</span>

@@ -171,7 +171,7 @@ export default function TrackPage() {
           onSubmit={handleSearch}
           className="relative max-w-xl mx-auto flex flex-col sm:flex-row gap-3 items-stretch"
         >
-          <div className="flex-1 flex items-center bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-600 px-4 shadow-xs focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-500/30 transition-all">
+          <div className="flex-1 flex items-center bg-white dark:bg-[#0a2220] rounded-xl border border-stone-200 dark:border-teal-900 px-4 shadow-xs focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-500/30 transition-all">
             <Search className="w-5 h-5 text-stone-400 shrink-0" />
             <input
               type="text"
@@ -206,7 +206,7 @@ export default function TrackPage() {
             {/* DEFAULT STATE */}
             {searchStatus === 'idle' && (
               <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="bg-white/80 dark:bg-stone-800/80 backdrop-blur-xl border border-stone-200 dark:border-stone-600 border-dashed rounded-2xl p-8 text-center max-w-xl mx-auto"
+                className="bg-white/80 dark:bg-[#163432] backdrop-blur-xl border border-stone-200 dark:border-teal-900 border-dashed rounded-2xl p-8 text-center max-w-xl mx-auto"
               >
                 <div className="text-stone-300 dark:text-stone-700 mb-4 flex justify-center"><Clock className="w-10 h-10" /></div>
                 <h4 className="font-semibold text-stone-700 dark:text-stone-300 mb-2">Menunggu Token</h4>
@@ -237,7 +237,7 @@ export default function TrackPage() {
               >
 
                 {/* Meta Info */}
-                <motion.div variants={FADE_IN} className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-2xl p-6 shadow-md">
+                <motion.div variants={FADE_IN} className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/90 dark:bg-[#163432] backdrop-blur-xl border border-stone-200 dark:border-teal-900 rounded-2xl p-6 shadow-md">
                   <div>
                     <p className="text-xs text-stone-400 dark:text-stone-500 uppercase tracking-widest font-semibold mb-1">Status Penanganan</p>
                     <div className="flex items-center gap-3">
@@ -265,7 +265,7 @@ export default function TrackPage() {
                 </motion.div>
 
                 {/* Timeline */}
-                <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-2xl p-8 shadow-md">
+                <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-[#163432] backdrop-blur-xl border border-stone-200 dark:border-teal-900 rounded-2xl p-8 shadow-md">
                   <h3 className="text-lg font-bold mb-7 flex items-center gap-2 text-stone-900 dark:text-stone-50">
                     <Clock className="w-5 h-5 text-teal-600 dark:text-teal-400" /> Timeline Penanganan Kasus
                   </h3>
@@ -297,7 +297,7 @@ export default function TrackPage() {
 
                 {/* Evidence Verification Status (Features 1 & 5) */}
                 {foundReport.evidences && foundReport.evidences.length > 0 && (
-                  <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-2xl p-7 shadow-md space-y-4">
+                  <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-[#163432] backdrop-blur-xl border border-stone-200 dark:border-teal-900 rounded-2xl p-7 shadow-md space-y-4">
                     <h3 className="text-lg font-bold text-stone-900 dark:text-stone-50 flex items-center gap-2">
                       <Paperclip className="w-5 h-5 text-teal-600 dark:text-teal-400" /> Status Integritas & Verifikasi Bukti
                     </h3>
@@ -330,7 +330,7 @@ export default function TrackPage() {
                 )}
 
                 {/* Chat Section */}
-                <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl border border-stone-200 dark:border-stone-600 rounded-2xl p-7 shadow-md">
+                <motion.div variants={FADE_IN} className="bg-white/90 dark:bg-[#163432] backdrop-blur-xl border border-stone-200 dark:border-teal-900 rounded-2xl p-7 shadow-md">
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-lg font-bold text-stone-900 dark:text-stone-50 flex items-center gap-2">
                       <MessageSquare className="w-5 h-5 text-teal-600 dark:text-teal-400" /> Komunikasi Aman (Dua-Arah)

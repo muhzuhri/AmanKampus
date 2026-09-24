@@ -13,13 +13,13 @@ export default function Footer() {
     return null;
   }
   return (
-    <footer className="relative z-10 border-t border-stone-800 dark:border-teal-800 bg-teal-950 dark:bg-stone-900 pt-16 pb-10 w-full text-stone-300">
+    <footer className="relative z-10 border-t border-stone-800 dark:border-teal-800 bg-teal-950 dark:bg-mauve-900 pt-16 pb-10 w-full text-stone-300">
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-16 mb-12">
         <div className="col-span-1 md:col-span-2 space-y-5">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
               <Image
-                src="/images/logok.png"
+                src="/images/logokk.png"
                 alt="AmanKampus Logo"
                 width={36}
                 height={36}
@@ -63,9 +63,8 @@ export default function Footer() {
         <div className="space-y-5">
           <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Legal & Privasi</h4>
           <ul className="space-y-3 text-sm text-stone-400 dark:text-stone-400">
-            <li><a href="#" className="hover:text-teal-400 transition-colors font-medium">Kebijakan Privasi</a></li>
-            <li><a href="#" className="hover:text-teal-400 transition-colors font-medium">Syarat Layanan</a></li>
-            <li><a href="#" className="hover:text-teal-400 transition-colors font-medium">Enkripsi Zero-Knowledge</a></li>
+            <li><Link href="/education" className="hover:text-teal-400 transition-colors font-medium">Kebijakan Privasi & Hak Pelapor</Link></li>
+            <li><Link href="/support" className="hover:text-teal-400 transition-colors font-medium">Bantuan & Layanan Satgas</Link></li>
           </ul>
         </div>
       </div>

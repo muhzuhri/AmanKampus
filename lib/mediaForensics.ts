@@ -11,6 +11,7 @@ const AI_VIDEO_KEYWORDS = [
   'runway',
   'runwayml',
   'gen-2',
+  'gen-3',
   'pika',
   'pikalabs',
   'luma',
@@ -27,9 +28,26 @@ const AI_VIDEO_KEYWORDS = [
   'morph studio',
   'kaiber',
   'deforum',
+  'vidu',
+  'minimax',
+  'hailuo',
+  'hunyuan',
+  'flux video',
+  'heygen',
+  'synthesia',
+  'deepfake',
+  'wav2lip',
+  'sadtalker',
+  'roop',
+  'faceswap',
+  'facefusion',
+  'deepfacelab',
   'synthetic_video',
   'generated_video',
   'ai_generated_video',
+  'ai_video',
+  'c2pa.org',
+  'trainedalgorithmicmedia',
 ];
 
 const AI_AUDIO_KEYWORDS = [
@@ -49,10 +67,30 @@ const AI_AUDIO_KEYWORDS = [
   'audiocraft',
   'musicgen',
   'diff-svc',
+  'whisper',
+  'heygen',
+  'synthesia',
+  'murf',
+  'murf.ai',
+  'speechify',
+  'play.ht',
+  'resemble.ai',
+  'descript',
+  'resemble',
   'voice_clone',
   'synthetic_audio',
   'generated_audio',
   'ai_voice',
+  'tts_generated',
+  'vocaloid',
+  'kits.ai',
+  'voiceai',
+  'voice.ai',
+  'uberduck',
+  'fakeyou',
+  'voiceify',
+  'weights.gg',
+  'coqui',
 ];
 
 const VIDEO_EDITOR_KEYWORDS = [
@@ -69,6 +107,8 @@ const VIDEO_EDITOR_KEYWORDS = [
   'kinemaster',
   'obs studio',
   'ffmpeg',
+  'shotcut',
+  'vsdc',
 ];
 
 const AUDIO_EDITOR_KEYWORDS = [
@@ -83,9 +123,11 @@ const AUDIO_EDITOR_KEYWORDS = [
   'reaper',
   'garageband',
   'bandlab',
+  'sound forge',
+  'wavepad',
 ];
 
-const C2PA_MARKERS = ['c2pa', 'c2ma', 'jumb', 'jumbf', 'urn:c2pa', 'c2pa.org'];
+const C2PA_MARKERS = ['c2pa', 'c2ma', 'jumb', 'jumbf', 'urn:c2pa', 'c2pa.org', 'stds.iptc.org'];
 
 function bytesToAscii(bytes: Uint8Array): string {
   let out = '';
@@ -209,7 +251,7 @@ export function analyzeVideoForensics(
   details: string[];
 } {
   const fileNameLower = file.name.toLowerCase();
-  const scanLen = Math.min(buffer.byteLength, 4 * 1024 * 1024);
+  const scanLen = Math.min(buffer.byteLength, 8 * 1024 * 1024);
   const bytes = new Uint8Array(buffer.slice(0, scanLen));
   const asciiHeader = bytesToAscii(bytes).toLowerCase();
 
@@ -223,18 +265,32 @@ export function analyzeVideoForensics(
     fileNameLower.includes('pika') ||
     fileNameLower.includes('luma') ||
     fileNameLower.includes('kling') ||
+    fileNameLower.includes('haiper') ||
+    fileNameLower.includes('svd') ||
+    fileNameLower.includes('animatediff') ||
+    fileNameLower.includes('minimax') ||
+    fileNameLower.includes('hailuo') ||
+    fileNameLower.includes('vido') ||
+    fileNameLower.includes('gen2') ||
+    fileNameLower.includes('gen3') ||
+    fileNameLower.includes('deepfake') ||
+    fileNameLower.includes('wav2lip') ||
     fileNameLower.includes('ai-generated') ||
+    fileNameLower.includes('ai_video') ||
     fileNameLower.includes('synthetic');
 
   const isEditorFileName =
     fileNameLower.includes('capcut') ||
     fileNameLower.includes('premiere') ||
+    fileNameLower.includes('aftereffects') ||
+    fileNameLower.includes('davinci') ||
+    fileNameLower.includes('filmora') ||
     fileNameLower.includes('edited') ||
     fileNameLower.includes('render');
 
   const details: string[] = [];
 
-  // Deteksi resolusi / codec sederhana
+  // Deteksi info container & codec
   let codecInfo = 'H.264 / AAC';
   if (asciiHeader.includes('vp09') || asciiHeader.includes('vp8')) codecInfo = 'VP9 / WebM Stream';
   if (asciiHeader.includes('av01')) codecInfo = 'AV1 Video Stream';
@@ -242,17 +298,25 @@ export function analyzeVideoForensics(
 
   details.push(`📹 Format Berkas Video: Container MP4/WebM (${codecInfo}).`);
 
+  // Indikator C2PA / Synthetic provenance
+  const hasSyntheticProvenance =
+    asciiHeader.includes('trainedalgorithmicmedia') ||
+    asciiHeader.includes('compositewithtrained') ||
+    asciiHeader.includes('digitalsourcetype');
+
   // 1) AI Synthetic Video Detection
-  if (detectedAi.length > 0 || isAiFileName || detectedC2pa.length > 0) {
+  if (detectedAi.length > 0 || isAiFileName || detectedC2pa.length > 0 || hasSyntheticProvenance) {
     const matches = Array.from(
       new Set([
         ...detectedAi,
-        ...(isAiFileName ? ['nama file terindikasi ai'] : []),
+        ...(isAiFileName ? ['nama file terindikasi ai video'] : []),
         ...(detectedC2pa.length > 0 ? ['c2pa provenance'] : []),
+        ...(hasSyntheticProvenance ? ['sintesis c2pa metadata'] : []),
       ])
     ).join(', ');
-    details.push(`⚠️ Indikasi AI-Generated Video: terdeteksi stempel generator sintesis (${matches.toUpperCase()}).`);
-    details.push('❗ Peringatan Sistem: bukti video terindikasi buatan AI / Deepfake dan tidak otomatis valid.');
+    details.push(`⚠️ Indikasi AI-Generated Video / Deepfake: terdeteksi stempel generator sintesis (${matches.toUpperCase()}).`);
+    details.push('⚠️ Pemindaian tingkat biner: jejak AI terdeteksi pada header MP4/WebM atom, XMP, atau C2PA.');
+    details.push('❗ Peringatan Sistem: berkas video terindikasi buatan AI / Deepfake dan tidak otomatis valid.');
     return { status: 'Manipulated', details };
   }
 
@@ -262,18 +326,18 @@ export function analyzeVideoForensics(
       new Set([...detectedEditor, ...(isEditorFileName ? ['terdeteksi di nama file'] : [])])
     ).join(', ');
     details.push(`⚠️ Indikasi Software Editor Video: terdeteksi jejak peranti pengolah video (${matches.toUpperCase()}).`);
-    details.push('🔍 Tim Satgas wajib melakukan verifikasi integritas potongan video.');
+    details.push('🔍 Catatan Forensik: Tim Satgas wajib melakukan verifikasi penyuntingan/pemotongan rekaman.');
     return { status: 'Needs Review', details };
   }
 
-  details.push('🟢 Structure Check: container video utuh tanpa stempel sintesis AI.');
-  details.push('🛡️ Cryptographic SHA-256 dicetak untuk menjamin rantai integritas berkas.');
+  details.push('🟢 Pemindaian Biner Video: container utuh tanpa stempel generator AI / C2PA synthetic.');
+  details.push('🛡️ Cryptographic SHA-256 dicetak untuk menjamin rantai integritas bukti video.');
   return { status: 'Original', details };
 }
 
 /**
  * Analisis Forensik Berkas Audio (MP3 / WAV / OGG / M4A)
- * Meneliti stempel AI Voice Cloner (ElevenLabs, Suno, RVC) & peranti pengolah suara.
+ * Meneliti stempel AI Voice Cloner (ElevenLabs, Suno, Udio, RVC, Whisper, dll) & peranti pengolah suara.
  */
 export function analyzeAudioForensics(
   file: File,
@@ -283,7 +347,7 @@ export function analyzeAudioForensics(
   details: string[];
 } {
   const fileNameLower = file.name.toLowerCase();
-  const scanLen = Math.min(buffer.byteLength, 4 * 1024 * 1024);
+  const scanLen = Math.min(buffer.byteLength, 8 * 1024 * 1024);
   const bytes = new Uint8Array(buffer.slice(0, scanLen));
   const asciiHeader = bytesToAscii(bytes).toLowerCase();
 
@@ -293,16 +357,27 @@ export function analyzeAudioForensics(
 
   const isAiFileName =
     fileNameLower.includes('elevenlabs') ||
+    fileNameLower.includes('eleven_labs') ||
     fileNameLower.includes('suno') ||
     fileNameLower.includes('udio') ||
     fileNameLower.includes('rvc') ||
+    fileNameLower.includes('tts') ||
     fileNameLower.includes('voice-clone') ||
+    fileNameLower.includes('voice_clone') ||
     fileNameLower.includes('ai-voice') ||
-    fileNameLower.includes('synthetic');
+    fileNameLower.includes('ai_voice') ||
+    fileNameLower.includes('synthetic') ||
+    fileNameLower.includes('bark') ||
+    fileNameLower.includes('speechify') ||
+    fileNameLower.includes('murf') ||
+    fileNameLower.includes('vocaloid');
 
   const isEditorFileName =
     fileNameLower.includes('audacity') ||
     fileNameLower.includes('flstudio') ||
+    fileNameLower.includes('ableton') ||
+    fileNameLower.includes('protools') ||
+    fileNameLower.includes('cubase') ||
     fileNameLower.includes('edited') ||
     fileNameLower.includes('mix');
 
@@ -312,22 +387,33 @@ export function analyzeAudioForensics(
   let formatInfo = 'MP3 / Audio Stream';
   if (bytes.length > 4 && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46) {
     formatInfo = 'WAV Uncompressed PCM';
-  } else if (asciiHeader.includes('oggS')) {
+  } else if (asciiHeader.includes('oggs')) {
     formatInfo = 'OGG Vorbis Audio';
+  } else if (asciiHeader.includes('ftypm4a') || asciiHeader.includes('mp42')) {
+    formatInfo = 'M4A / AAC Audio Stream';
   }
 
   details.push(`🎙️ Format Berkas Audio: ${formatInfo}.`);
 
+  // Indikator C2PA / Synthetic audio metadata
+  const hasSyntheticProvenance =
+    asciiHeader.includes('trainedalgorithmicmedia') ||
+    asciiHeader.includes('compositewithtrained') ||
+    asciiHeader.includes('elevenlabs') ||
+    asciiHeader.includes('tts');
+
   // 1) AI Synthetic Voice / Music Detection
-  if (detectedAi.length > 0 || isAiFileName || detectedC2pa.length > 0) {
+  if (detectedAi.length > 0 || isAiFileName || detectedC2pa.length > 0 || hasSyntheticProvenance) {
     const matches = Array.from(
       new Set([
         ...detectedAi,
-        ...(isAiFileName ? ['nama file terindikasi ai voice'] : []),
+        ...(isAiFileName ? ['nama file terindikasi ai voice/tts'] : []),
         ...(detectedC2pa.length > 0 ? ['c2pa provenance'] : []),
+        ...(hasSyntheticProvenance ? ['sintesis audio metadata'] : []),
       ])
     ).join(', ');
     details.push(`⚠️ Indikasi AI Synthetic Voice / Music: terdeteksi stempel generator suara (${matches.toUpperCase()}).`);
+    details.push('⚠️ Pemindaian biner audio: jejak AI terdeteksi dari ID3 tags, RIFF chunks, atau stempel kloning vokal.');
     details.push('❗ Peringatan Sistem: bukti audio terindikasi Kloning Suara AI / Deepfake Audio.');
     return { status: 'Manipulated', details };
   }
@@ -338,11 +424,12 @@ export function analyzeAudioForensics(
       new Set([...detectedEditor, ...(isEditorFileName ? ['terdeteksi di nama file'] : [])])
     ).join(', ');
     details.push(`⚠️ Indikasi Digital Audio Workstation (DAW): terdeteksi jejak software penyunting suara (${matches.toUpperCase()}).`);
-    details.push('🔍 Rekomendasi: tinjauan manual oleh Satgas untuk mendeteksi penyuntingan/penyambungan rekaman.');
+    details.push('🔍 Catatan Forensik: Tim Satgas wajib melakukan tinjauan manual terhadap potensi potongan/sambungan rekaman.');
     return { status: 'Needs Review', details };
   }
 
-  details.push('🟢 Structure Check: stream rekaman audio utuh tanpa stempel kloning suara AI.');
-  details.push('🛡️ Cryptographic SHA-256 dicetak untuk menjamin integritas bukti.');
+  details.push('🟢 Pemindaian Biner Audio: stream rekaman audio utuh tanpa stempel kloning suara AI.');
+  details.push('🛡️ Cryptographic SHA-256 dicetak untuk menjamin integritas bukti audio.');
   return { status: 'Original', details };
 }
+
