@@ -53,6 +53,7 @@ import {
   recordEvidenceHashes,
 } from '@/lib/antiSpam';
 import { type Report, type Evidence } from '@/lib/types';
+import { saveReportToDatabase } from '@/lib/reportsService';
 import { EvidenceSecurityPanel, type ForensicFileItem } from '@/components/EvidenceSecurityPanel';
 
 // ─── Helpers & Config ──────────────────────────────────────────────────────────
@@ -526,37 +527,14 @@ export default function ReportPage() {
     };
 
     try {
-      const savedStr = localStorage.getItem('aman_kampus_reports');
-      const existing: Report[] = savedStr ? JSON.parse(savedStr) : [];
-      existing.unshift(newReport);
-      localStorage.setItem('aman_kampus_reports', JSON.stringify(existing));
+      await saveReportToDatabase(newReport);
       recordSubmission();
       recordEvidenceHashes(
         caseId,
         evidences.map((ev) => ev.sha256)
       );
     } catch (e) {
-      console.warn('LocalStorage quota limit reached, saving report without heavy dataUrl to ensure entry in admin...', e);
-      try {
-        const lightReport: Report = {
-          ...newReport,
-          evidences: newReport.evidences.map((ev) => ({
-            ...ev,
-            dataUrl: undefined,
-          })),
-        };
-        const savedStr = localStorage.getItem('aman_kampus_reports');
-        const existing: Report[] = savedStr ? JSON.parse(savedStr) : [];
-        existing.unshift(lightReport);
-        localStorage.setItem('aman_kampus_reports', JSON.stringify(existing));
-        recordSubmission();
-        recordEvidenceHashes(
-          caseId,
-          evidences.map((ev) => ev.sha256)
-        );
-      } catch (err2) {
-        console.error('Final fallback failed', err2);
-      }
+      console.warn('Gagal menyimpan laporan:', e);
     }
 
     setResultCaseId(caseId);

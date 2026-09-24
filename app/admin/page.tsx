@@ -59,6 +59,7 @@ import {
   type Evidence,
   MOCK_REPORTS,
 } from '@/lib/types';
+import { fetchReportsFromDatabase, updateReportInDatabase } from '@/lib/reportsService';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -186,29 +187,9 @@ export default function AdminDashboard() {
     return () => window.removeEventListener('storage', onStorage);
   }, [router]);
 
-  const loadReports = () => {
-    const saved = localStorage.getItem('aman_kampus_reports');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const valid = parsed.filter((r) => r.caseId && r.anonymousToken);
-          if (valid.length === 0) valid.push(...MOCK_REPORTS);
-          if (valid.length !== parsed.length) {
-            localStorage.setItem('aman_kampus_reports', JSON.stringify(valid));
-          }
-          setReports(valid);
-        } else {
-          setReports(MOCK_REPORTS);
-        }
-      } catch {
-        localStorage.setItem('aman_kampus_reports', JSON.stringify(MOCK_REPORTS));
-        setReports(MOCK_REPORTS);
-      }
-    } else {
-      localStorage.setItem('aman_kampus_reports', JSON.stringify(MOCK_REPORTS));
-      setReports(MOCK_REPORTS);
-    }
+  const loadReports = async () => {
+    const fetched = await fetchReportsFromDatabase();
+    setReports(fetched);
   };
 
   const resetMockReports = () => {
@@ -327,17 +308,13 @@ export default function AdminDashboard() {
       actor: 'Satgas',
       timestamp: new Date().toISOString(),
     };
-    const updated = reports.map((r) => {
-      if (r.caseId === selectedReport.caseId) {
-        const logs = r.auditLogs ? [...r.auditLogs, auditEntry] : [auditEntry];
-        return { ...r, status: newStatus, auditLogs: logs };
-      }
-      return r;
-    });
+    const logs = selectedReport.auditLogs ? [...selectedReport.auditLogs, auditEntry] : [auditEntry];
+    const updatedReport = { ...selectedReport, status: newStatus, auditLogs: logs };
+
+    const updated = reports.map((r) => (r.caseId === selectedReport.caseId ? updatedReport : r));
     setReports(updated);
-    const updatedReport = updated.find((r) => r.caseId === selectedReport.caseId)!;
     setSelectedReport(updatedReport);
-    localStorage.setItem('aman_kampus_reports', JSON.stringify(updated));
+    updateReportInDatabase(selectedReport.caseId, { status: newStatus, auditLogs: logs });
   };
 
   // Feature 5: Verify Evidence Authenticity by Satgas
@@ -353,28 +330,24 @@ export default function AdminDashboard() {
       timestamp: new Date().toISOString(),
     };
 
-    const updated = reports.map((r) => {
-      if (r.caseId === selectedReport.caseId) {
-        const newEvidences = r.evidences.map((ev) => {
-          if (ev.evidenceId === evidenceId) {
-            return {
-              ...ev,
-              verificationStatus: status,
-              verificationNote: note || (status === 'Terverifikasi Valid' ? 'Bukti tervalidasi asli & tidak terdeteksi manipulasi.' : 'Berkas ditandai mencurigakan atau tidak valid.'),
-            };
-          }
-          return ev;
-        });
-        const logs = r.auditLogs ? [...r.auditLogs, auditEntry] : [auditEntry];
-        return { ...r, evidences: newEvidences, auditLogs: logs };
+    const newEvidences = selectedReport.evidences.map((ev) => {
+      if (ev.evidenceId === evidenceId) {
+        return {
+          ...ev,
+          verificationStatus: status,
+          verificationNote: note || (status === 'Terverifikasi Valid' ? 'Bukti tervalidasi asli & tidak terdeteksi manipulasi.' : 'Berkas ditandai mencurigakan atau tidak valid.'),
+        };
       }
-      return r;
+      return ev;
     });
 
+    const logs = selectedReport.auditLogs ? [...selectedReport.auditLogs, auditEntry] : [auditEntry];
+    const updatedReport = { ...selectedReport, evidences: newEvidences, auditLogs: logs };
+
+    const updated = reports.map((r) => (r.caseId === selectedReport.caseId ? updatedReport : r));
     setReports(updated);
-    const updatedReport = updated.find((r) => r.caseId === selectedReport.caseId)!;
     setSelectedReport(updatedReport);
-    localStorage.setItem('aman_kampus_reports', JSON.stringify(updated));
+    updateReportInDatabase(selectedReport.caseId, { evidences: newEvidences, auditLogs: logs });
   };
 
   const handleSendSatgasMessage = (e: React.FormEvent) => {
@@ -393,19 +366,16 @@ export default function AdminDashboard() {
       actor: 'Satgas',
       timestamp: new Date().toISOString(),
     };
-    const updated = reports.map((r) => {
-      if (r.caseId === selectedReport.caseId) {
-        const msgs = r.messages ? [...r.messages, newMsg] : [newMsg];
-        const logs = r.auditLogs ? [...r.auditLogs, auditEntry] : [auditEntry];
-        return { ...r, messages: msgs, auditLogs: logs };
-      }
-      return r;
-    });
+
+    const msgs = selectedReport.messages ? [...selectedReport.messages, newMsg] : [newMsg];
+    const logs = selectedReport.auditLogs ? [...selectedReport.auditLogs, auditEntry] : [auditEntry];
+    const updatedReport = { ...selectedReport, messages: msgs, auditLogs: logs };
+
+    const updated = reports.map((r) => (r.caseId === selectedReport.caseId ? updatedReport : r));
     setReports(updated);
-    const updatedReport = updated.find((r) => r.caseId === selectedReport.caseId)!;
     setSelectedReport(updatedReport);
     setChatInput('');
-    localStorage.setItem('aman_kampus_reports', JSON.stringify(updated));
+    updateReportInDatabase(selectedReport.caseId, { messages: msgs, auditLogs: logs });
   };
 
   const handleAddInternalNote = (e: React.FormEvent) => {

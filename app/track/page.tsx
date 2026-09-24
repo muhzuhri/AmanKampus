@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Report, Message, MOCK_REPORTS } from '@/lib/types';
+import { fetchReportByTokenFromDatabase, updateReportInDatabase } from '@/lib/reportsService';
 
 export default function TrackPage() {
   const [tokenInput, setTokenInput] = useState('');
@@ -30,7 +31,7 @@ export default function TrackPage() {
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = tokenInput.trim().toUpperCase();
     if (!trimmed) return;
@@ -43,15 +44,8 @@ export default function TrackPage() {
 
     setSearchStatus('loading');
 
-    setTimeout(() => {
-      const savedStr = localStorage.getItem('aman_kampus_reports');
-      let allReports: Report[] = MOCK_REPORTS;
-      if (savedStr) {
-        try { allReports = JSON.parse(savedStr); }
-        catch { allReports = MOCK_REPORTS; }
-      }
-
-      const match = allReports.find(r => r.anonymousToken.toUpperCase() === trimmed);
+    try {
+      const match = await fetchReportByTokenFromDatabase(trimmed);
       if (match) {
         setFoundReport(match);
         setSearchStatus('found');
@@ -59,35 +53,29 @@ export default function TrackPage() {
         setFoundReport(null);
         setSearchStatus('notFound');
       }
-    }, 1200);
+    } catch (err) {
+      console.error(err);
+      setFoundReport(null);
+      setSearchStatus('notFound');
+    }
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim() || !foundReport) return;
     setIsSending(true);
-    setTimeout(() => {
-      const savedStr = localStorage.getItem('aman_kampus_reports');
-      if (savedStr) {
-        try {
-          const allReports: Report[] = JSON.parse(savedStr);
-          const idx = allReports.findIndex(r => r.caseId === foundReport.caseId);
-          if (idx !== -1) {
-            const newMsg: Message = { id: `MSG-${Date.now()}`, sender: 'Pelapor', text: chatInput, timestamp: new Date().toISOString() };
-            const updatedReport = { ...allReports[idx] };
-            if (!updatedReport.messages) updatedReport.messages = [];
-            updatedReport.messages.push(newMsg);
-            if (!updatedReport.auditLogs) updatedReport.auditLogs = [];
-            updatedReport.auditLogs.push({ id: `AL-${Date.now()}`, action: 'Pelapor mengirim balasan anonim', actor: 'Pelapor', timestamp: new Date().toISOString() });
-            allReports[idx] = updatedReport;
-            localStorage.setItem('aman_kampus_reports', JSON.stringify(allReports));
-            setFoundReport(updatedReport);
-            setChatInput('');
-          }
-        } catch (err) { console.error(err); }
-      }
-      setIsSending(false);
-    }, 600);
+
+    const newMsg: Message = { id: `MSG-${Date.now()}`, sender: 'Pelapor', text: chatInput, timestamp: new Date().toISOString() };
+    const msgs = foundReport.messages ? [...foundReport.messages, newMsg] : [newMsg];
+    const auditEntry = { id: `AL-${Date.now()}`, action: 'Pelapor mengirim balasan anonim', actor: 'Pelapor' as const, timestamp: new Date().toISOString() };
+    const logs = foundReport.auditLogs ? [...foundReport.auditLogs, auditEntry] : [auditEntry];
+
+    const updatedReport = { ...foundReport, messages: msgs, auditLogs: logs };
+    setFoundReport(updatedReport);
+    setChatInput('');
+
+    await updateReportInDatabase(foundReport.caseId, { messages: msgs, auditLogs: logs });
+    setIsSending(false);
   };
 
   const formatDate = (iso: string) => {
