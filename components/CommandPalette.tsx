@@ -46,7 +46,7 @@ export function CommandPalette() {
               exit={{ opacity: 0, scale: 0.96, y: -10 }}
               transition={{ duration: 0.15 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden"
+              className="w-full max-w-lg bg-white dark:bg-[#163432] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden"
             >
               <Command className="w-full h-full flex flex-col overflow-hidden text-slate-800 dark:text-slate-100">
                 <div className="flex items-center px-4 py-3.5 border-b border-slate-100 dark:border-slate-800" cmdk-input-wrapper="">
@@ -69,32 +69,32 @@ export function CommandPalette() {
                   <Command.Group heading="Navigasi Halaman" className="text-[11px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 px-3 py-2">
                     <Command.Item
                       onSelect={() => handleSelect(() => router.push('/'))}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-slate-800 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-teal-900 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-teal-900 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
                     >
                       <Home className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Beranda
                     </Command.Item>
                     <Command.Item
                       onSelect={() => handleSelect(() => router.push('/report'))}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-slate-800 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-teal-900 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
                     >
                       <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" /> Buat Laporan Anonim
                     </Command.Item>
                     <Command.Item
                       onSelect={() => handleSelect(() => router.push('/track'))}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-slate-800 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-teal-900 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
                     >
                       <Map className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Lacak Progres Laporan
                     </Command.Item>
 
                     <Command.Item
                       onSelect={() => handleSelect(() => router.push('/support'))}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-slate-800 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-teal-900 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
                     >
                       <HeartHandshake className="w-4 h-4 text-rose-500" /> Pusat Bantuan & PFA
                     </Command.Item>
                     <Command.Item
                       onSelect={() => handleSelect(() => router.push('/education'))}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-slate-800 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-teal-900 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
                     >
                       <BookOpen className="w-4 h-4 text-indigo-500" /> Edukasi & Hak Korban
                     </Command.Item>
@@ -103,7 +103,7 @@ export function CommandPalette() {
                   <Command.Group heading="Pilihan Tema" className="text-[11px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 px-3 py-2 mt-2 border-t border-slate-100 dark:border-slate-800">
                     <Command.Item
                       onSelect={() => handleSelect(() => setTheme('light'))}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-slate-800 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-teal-900 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
                     >
                       <Sun className="w-4 h-4 text-amber-500" />
                       Ganti Tema (Mode Terang)
@@ -111,7 +111,7 @@ export function CommandPalette() {
                     </Command.Item>
                     <Command.Item
                       onSelect={() => handleSelect(() => setTheme('dark'))}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-slate-800 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-teal-900 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
                     >
                       <Moon className="w-4 h-4 text-indigo-400" />
                       Ganti Tema (Mode Gelap)
@@ -119,7 +119,7 @@ export function CommandPalette() {
                     </Command.Item>
                     <Command.Item
                       onSelect={() => handleSelect(() => setTheme('system'))}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-slate-800 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-slate-800 hover:text-teal-900 dark:hover:text-teal-300 my-1 aria-selected:bg-teal-50 dark:aria-selected:bg-teal-900 aria-selected:text-teal-900 dark:aria-selected:text-teal-300 transition-colors"
                     >
                       <Laptop className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                       Tema Mengikuti Sistem

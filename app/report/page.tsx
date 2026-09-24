@@ -583,7 +583,7 @@ export default function ReportPage() {
         {/* ── SUCCESS STATE ────────────────────────────────────────────────── */}
         {isSuccess ? (
           <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
-            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-teal-500/40 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6">
+            <div className="bg-white/90 dark:bg-[#163432] backdrop-blur-xl border border-teal-500/40 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6">
 
               <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 shadow-md">
                 <CheckCircle className="w-10 h-10" />
