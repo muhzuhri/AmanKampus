@@ -48,6 +48,9 @@ import {
   Printer,
   Layers,
   Building2,
+  Database,
+  Zap,
+  Code,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -59,7 +62,14 @@ import {
   type Evidence,
   MOCK_REPORTS,
 } from '@/lib/types';
-import { fetchReportsFromDatabase, updateReportInDatabase } from '@/lib/reportsService';
+import {
+  fetchReportsFromDatabase,
+  updateReportInDatabase,
+  checkSupabaseStatus,
+  seedMockReportsToSupabase,
+  type SupabaseStatusInfo,
+} from '@/lib/reportsService';
+
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -159,6 +169,13 @@ export default function AdminDashboard() {
   const [internalNoteInput, setInternalNoteInput] = useState('');
   const [internalNotesMap, setInternalNotesMap] = useState<Record<string, { id: string; text: string; author: string; timestamp: string }[]>>({});
 
+  // Supabase Database Connection & Migration State
+  const [dbStatus, setDbStatus] = useState<SupabaseStatusInfo | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [showSqlGuide, setShowSqlGuide] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
+
   // ── Auth + data load ────────────────────────────────────────────────────
   useEffect(() => {
     setMounted(true);
@@ -188,8 +205,30 @@ export default function AdminDashboard() {
   }, [router]);
 
   const loadReports = async () => {
+    const status = await checkSupabaseStatus();
+    setDbStatus(status);
     const fetched = await fetchReportsFromDatabase();
     setReports(fetched);
+  };
+
+  const handleSyncToSupabase = async () => {
+    setIsSyncing(true);
+    setSyncMessage(null);
+    const reportsToSeed = reports.length > 0 ? reports : MOCK_REPORTS;
+    const res = await seedMockReportsToSupabase(reportsToSeed);
+    setIsSyncing(false);
+    if (res.success) {
+      setSyncMessage({
+        type: 'success',
+        text: `✅ Berhasil! ${res.count} laporan telah diunggah dan disinkronkan ke database Supabase.`,
+      });
+      await loadReports();
+    } else {
+      setSyncMessage({
+        type: 'error',
+        text: `❌ Gagal sinkronisasi ke Supabase: ${res.error || 'Terjadi kesalahan'}. Pastikan tabel 'reports' telah dibuat di Supabase SQL Editor.`,
+      });
+    }
   };
 
   const resetMockReports = () => {
@@ -197,6 +236,7 @@ export default function AdminDashboard() {
     setReports(MOCK_REPORTS);
     setSelectedReport(null);
   };
+
 
   const handleLogout = () => {
     sessionStorage.removeItem('isAdminLoggedIn');
@@ -569,10 +609,11 @@ export default function AdminDashboard() {
 
       <main className="w-full max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5 relative z-10 overflow-x-hidden">
 
-        {/* ── DETAIL PANEL (when a report is selected) ─────────────────── */}
+               {/* ── DETAIL PANEL (when a report is selected) ─────────────────── */}
         <AnimatePresence>
           {selectedReport && (
             <motion.div
+
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
@@ -1245,10 +1286,141 @@ export default function AdminDashboard() {
           </p>
         </div>
 
+        {/* ── SQL SETUP & SCHEMA MODAL ────────────────────────────────────── */}
+        <AnimatePresence>
+          {showSqlGuide && (
+            <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl relative my-8"
+              >
+                <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 flex items-center justify-center">
+                      <Database className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-stone-900 dark:text-white text-base">
+                        Panduan Koneksi & Skrip SQL Supabas
+                      </h3>
+                      <p className="text-xs text-stone-500 dark:text-stone-400">
+                        Langkah-langkah menyambungkan AmanKampus dengan database cloud Supabase
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowSqlGuide(false)}
+                    className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 text-xs text-stone-700 dark:text-stone-300">
+                  <div className="space-y-2">
+                    <p className="font-bold text-stone-900 dark:text-stone-100">1. Konfigurasi File .env.local</p>
+                    <p className="text-stone-600 dark:text-stone-400 leading-relaxed">
+                      Buka Dashboard Supabase Anda → <strong>Project Settings → API</strong>. Salin Project URL dan Anon API Key ke file <code className="bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded font-mono text-teal-600 dark:text-teal-400">.env.local</code> di direktori proyek:
+                    </p>
+                    <pre className="bg-stone-950 text-stone-100 font-mono text-[11px] p-3 rounded-xl overflow-x-auto border border-stone-800">
+                      NEXT_PUBLIC_SUPABASE_URL=https://[YOUR-PROJECT].supabase.co{"\n"}
+                      NEXT_PUBLIC_SUPABASE_ANON_KEY=[YOUR-SUPABASE-ANON-KEY]
+                    </pre>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-stone-900 dark:text-stone-100">2. Skrip SQL Schema (Tabel & Kebijakan Akses RLS)</p>
+                      <button
+                        onClick={() => {
+                          const sqlText = `CREATE TABLE IF NOT EXISTS public.reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    case_id TEXT NOT NULL UNIQUE,
+    anonymous_token TEXT NOT NULL UNIQUE,
+    category TEXT NOT NULL,
+    incident_time TEXT,
+    involved_parties TEXT,
+    target_faculty TEXT,
+    chronology TEXT NOT NULL,
+    evidences JSONB DEFAULT '[]'::jsonb,
+    messages JSONB DEFAULT '[]'::jsonb,
+    audit_logs JSONB DEFAULT '[]'::jsonb,
+    status TEXT NOT NULL DEFAULT 'Laporan Diterima',
+    received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    is_anonymous BOOLEAN DEFAULT true,
+    abuse_flags JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public insert to reports" ON public.reports FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "Allow public read of reports" ON public.reports FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Allow public update of reports" ON public.reports FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);`;
+                          navigator.clipboard.writeText(sqlText);
+                          setCopiedSql(true);
+                          setTimeout(() => setCopiedSql(false), 2000);
+                        }}
+                        className="text-teal-600 dark:text-teal-400 hover:underline text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedSql ? 'Tersalin!' : 'Salin Skrip SQL'}
+                      </button>
+                    </div>
+                    <p className="text-stone-600 dark:text-stone-400 leading-relaxed">
+                      Jalankan skrip ini di Supabase Dashboard → <strong>SQL Editor → New Query → Run</strong>:
+                    </p>
+                    <pre className="bg-stone-950 text-teal-300 font-mono text-[10px] p-3 rounded-xl overflow-x-auto max-h-48 border border-stone-800">
+{`CREATE TABLE IF NOT EXISTS public.reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    case_id TEXT NOT NULL UNIQUE,
+    anonymous_token TEXT NOT NULL UNIQUE,
+    category TEXT NOT NULL,
+    incident_time TEXT,
+    involved_parties TEXT,
+    target_faculty TEXT,
+    chronology TEXT NOT NULL,
+    evidences JSONB DEFAULT '[]'::jsonb,
+    messages JSONB DEFAULT '[]'::jsonb,
+    audit_logs JSONB DEFAULT '[]'::jsonb,
+    status TEXT NOT NULL DEFAULT 'Laporan Diterima',
+    received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    is_anonymous BOOLEAN DEFAULT true,
+    abuse_flags JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public insert to reports" ON public.reports FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "Allow public read of reports" ON public.reports FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Allow public update of reports" ON public.reports FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);`}
+                    </pre>
+                  </div>
+
+                  <div className="p-3 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 rounded-xl text-teal-900 dark:text-teal-200 text-xs">
+                    <strong>Tips:</strong> Setelah menjalankan skrip SQL di atas, Anda dapat menekan tombol <strong>"⚡ Sinkronkan 8 Laporan ke Supabase"</strong> di dasbor admin ini untuk langsung mengunggah 8 data laporan ke Supabase!
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2 border-t border-stone-100 dark:border-stone-800">
+                  <button
+                    onClick={() => setShowSqlGuide(false)}
+                    className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs transition-all shadow-xs cursor-pointer"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
       </main>
     </div>
   );
 }
+
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 

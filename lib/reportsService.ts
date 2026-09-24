@@ -158,14 +158,77 @@ export async function fetchReportsFromDatabase(): Promise<Report[]> {
 }
 
 /**
- * 3. Seed data sampel ke Supabase (Bila tabel Supabase masih kosong)
+ * Check connectivity and report count on Supabase
  */
-export async function seedMockReportsToSupabase(): Promise<{ success: boolean; count: number; error?: string }> {
+export type SupabaseStatusInfo = {
+  isConfigured: boolean;
+  connected: boolean;
+  count: number;
+  error?: string;
+  url?: string;
+};
+
+export async function checkSupabaseStatus(): Promise<SupabaseStatusInfo> {
   const { url, key, isConfigured } = getSupabaseConfig();
-  if (!isConfigured) return { success: false, count: 0, error: 'Supabase belum dikonfigurasi' };
+  if (!isConfigured) {
+    return {
+      isConfigured: false,
+      connected: false,
+      count: 0,
+      url,
+      error: 'URL / Anon Key Supabase belum dikonfigurasi di .env.local',
+    };
+  }
 
   try {
-    const rows = MOCK_REPORTS.map(reportToDbRow);
+    const response = await fetch(`${url}/rest/v1/reports?select=case_id`, {
+      method: 'GET',
+      headers: {
+        'apikey': key,
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      return {
+        isConfigured: true,
+        connected: false,
+        count: 0,
+        url,
+        error: `Supabase merespons error (${response.status}): ${errText}`,
+      };
+    }
+
+    const rows = await response.json();
+    const count = Array.isArray(rows) ? rows.length : 0;
+    return {
+      isConfigured: true,
+      connected: true,
+      count,
+      url,
+    };
+  } catch (err: any) {
+    return {
+      isConfigured: true,
+      connected: false,
+      count: 0,
+      url,
+      error: err?.message || 'Gagal terhubung ke jaringan Supabase',
+    };
+  }
+}
+
+/**
+ * 3. Seed / Sinkronkan data sampel ke Supabase (Bila tabel Supabase masih kosong)
+ */
+export async function seedMockReportsToSupabase(reportsToSeed: Report[] = MOCK_REPORTS): Promise<{ success: boolean; count: number; error?: string }> {
+  const { url, key, isConfigured } = getSupabaseConfig();
+  if (!isConfigured) return { success: false, count: 0, error: 'Supabase belum dikonfigurasi di .env.local' };
+
+  try {
+    const rows = reportsToSeed.map(reportToDbRow);
     const response = await fetch(`${url}/rest/v1/reports`, {
       method: 'POST',
       headers: {
@@ -183,11 +246,12 @@ export async function seedMockReportsToSupabase(): Promise<{ success: boolean; c
     }
 
     const inserted = await response.json();
-    return { success: true, count: Array.isArray(inserted) ? inserted.length : MOCK_REPORTS.length };
+    return { success: true, count: Array.isArray(inserted) ? inserted.length : reportsToSeed.length };
   } catch (err: any) {
     return { success: false, count: 0, error: err?.message || 'Error seeding DB' };
   }
 }
+
 
 /**
  * 4. Ambil Laporan Tunggal berdasarkan Token Anonim (untuk /track)

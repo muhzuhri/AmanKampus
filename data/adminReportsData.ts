@@ -241,4 +241,134 @@ export const MOCK_REPORTS: Report[] = [
     status: 'Eskalasi ke Komite Etik',
     isAnonymous: true,
   },
+  {
+    caseId: 'CASE-2026-00006',
+    anonymousToken: 'AK-2026-P3K7V',
+    category: 'Stalking & Penguntitan di Area Kampus',
+    chronology:
+      'Penguntitan berulang di area parkir gedung perkuliahan dan lorong fakultas oleh oknum yang tidak dikenal, disertai pengiriman foto-foto keberadaan pelapor secara tersembunyi.',
+    incidentTime: '5 September 2026, Pukul 17.30 WIB',
+    involvedParties: 'Oknum tidak dikenal (Stalker)',
+    targetFaculty: 'Fakultas Hukum',
+    evidences: [
+      {
+        evidenceId: 'EVD-6001',
+        fileName: 'tangkapan_layar_pesan_stalking.png',
+        fileType: 'image/png',
+        fileSize: 512000,
+        sha256: 'a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0',
+        exifStripped: true,
+        forensicStatus: 'Original',
+        forensicDetails: [
+          'SHA-256 Checksum: Valid & Utuh',
+          'EXIF GPS Metadata: Stripped Demi Keamanan',
+        ],
+        reporterNote: 'Tangkapan layar berisi pesan penguntitan.',
+        verificationStatus: 'Terverifikasi Valid',
+        verificationNote: 'Laporan tervalidasi dan penambahan pengawasan satpam di titik lokasi parkir.',
+      },
+    ],
+    messages: [
+      {
+        id: 'MSG-601',
+        sender: 'Pelapor',
+        text: 'Mohon penambahan pengamanan di sekitar gedung fakultas hukum.',
+        timestamp: '2026-09-05T11:00:00.000Z',
+      },
+    ],
+    auditLogs: [
+      {
+        id: 'AL-601',
+        action: 'Laporan diterima oleh sistem terenkripsi',
+        actor: 'Sistem',
+        timestamp: '2026-09-05T10:30:00.000Z',
+      },
+    ],
+    receivedAt: '2026-09-05T10:30:00.000Z',
+    status: 'Diproses',
+    isAnonymous: true,
+  },
+  {
+    caseId: 'CASE-2026-00007',
+    anonymousToken: 'AK-2026-R8N4L',
+    category: 'Pelecehan Fisik di Ruang Laboratorium',
+    chronology:
+      'Tindakan kontak fisik yang tidak diinginkan dan ucapan bernada pelecehan saat kegiatan praktikum malam di Laboratorium Komputer.',
+    incidentTime: '6 September 2026, Pukul 19.45 WIB',
+    involvedParties: 'Asisten Laboratorium',
+    targetFaculty: 'Fakultas Ilmu Komputer',
+    evidences: [],
+    messages: [],
+    auditLogs: [
+      {
+        id: 'AL-701',
+        action: 'Laporan diterima oleh sistem terenkripsi',
+        actor: 'Sistem',
+        timestamp: '2026-09-06T13:00:00.000Z',
+      },
+      {
+        id: 'AL-702',
+        action: 'Status diubah: "Laporan Diterima" → "Diverifikasi"',
+        actor: 'Satgas',
+        timestamp: '2026-09-06T14:00:00.000Z',
+      },
+    ],
+    receivedAt: '2026-09-06T13:00:00.000Z',
+    status: 'Diverifikasi',
+    isAnonymous: true,
+  },
+  {
+    caseId: 'CASE-2026-00008',
+    anonymousToken: 'AK-2026-Z2W9P',
+    category: 'Pengancaman & Pemerasan Dokumen Pribadi',
+    chronology:
+      'Pemerasan dengan ancaman penyebaran dokumen pribadi dan rekaman jika tidak mentransfer sejumlah uang ke rekening tertentu.',
+    incidentTime: '7 September 2026, Pukul 21.00 WIB',
+    involvedParties: 'Oknum akun anonim',
+    targetFaculty: 'Fakultas Kedokteran',
+    evidences: [
+      {
+        evidenceId: 'EVD-8001',
+        fileName: 'bukti_transfer_dan_ancaman.png',
+        fileType: 'image/png',
+        fileSize: 680000,
+        sha256: 'f8e7d6c5b4a392817019283746554433221100ffeeddccbbaa99887766554433',
+        exifStripped: true,
+        forensicStatus: 'Original',
+        forensicDetails: [
+          'SHA-256 Checksum: Valid & Utuh',
+          'Analisis Forensik: Bukti percakapan asli tanpa rekayasa AI',
+        ],
+        reporterNote: 'Bukti obrolan pemerasan dan nomor rekening pelaku.',
+        verificationStatus: 'Terverifikasi Valid',
+        verificationNote: 'Diteruskan ke tim hukum dan cyber kepolisian setempat.',
+      },
+    ],
+    messages: [
+      {
+        id: 'MSG-801',
+        sender: 'Satgas',
+        text: 'Tim Satgas PPKS telah mengoordinasikan kasus ini dengan pihak kepolisian cyber.',
+        timestamp: '2026-09-08T08:00:00.000Z',
+      },
+    ],
+    auditLogs: [
+      {
+        id: 'AL-801',
+        action: 'Laporan diterima oleh sistem terenkripsi',
+        actor: 'Sistem',
+        timestamp: '2026-09-07T15:00:00.000Z',
+      },
+      {
+        id: 'AL-802',
+        action: 'Status diubah: "Diverifikasi" → "Mediasi & Konseling"',
+        actor: 'Satgas',
+        timestamp: '2026-09-08T08:05:00.000Z',
+      },
+    ],
+    receivedAt: '2026-09-07T15:00:00.000Z',
+    status: 'Mediasi & Konseling',
+    isAnonymous: true,
+  },
 ];
+
