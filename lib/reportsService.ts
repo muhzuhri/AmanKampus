@@ -102,11 +102,10 @@ export async function saveReportToDatabase(report: Report): Promise<{ success: b
 }
 
 /**
- * 2. Ambil Semua Laporan untuk Dasbor Admin (Supabase + Local Storage Backup)
+ * 2. Ambil Semua Laporan untuk Dasbor Admin (Murni dari Supabase bila terkonfigurasi)
  */
 export async function fetchReportsFromDatabase(): Promise<Report[]> {
   const { url, key, isConfigured } = getSupabaseConfig();
-  let dbReports: Report[] = [];
 
   if (isConfigured) {
     try {
@@ -122,7 +121,8 @@ export async function fetchReportsFromDatabase(): Promise<Report[]> {
       if (response.ok) {
         const rows = await response.json();
         if (Array.isArray(rows)) {
-          dbReports = rows.map(dbRowToReport);
+          // Apabila Supabase terkonfigurasi, kembalikan 100% data dari Supabase DB
+          return rows.map(dbRowToReport);
         }
       } else {
         console.warn('Supabase fetch error:', await response.text());
@@ -132,7 +132,7 @@ export async function fetchReportsFromDatabase(): Promise<Report[]> {
     }
   }
 
-  // Get local reports
+  // Fallback HANYA bila Supabase belum dikonfigurasi atau tidak terhubung
   let localReports: Report[] = [];
   if (typeof window !== 'undefined') {
     const savedStr = localStorage.getItem('aman_kampus_reports');
@@ -146,31 +146,51 @@ export async function fetchReportsFromDatabase(): Promise<Report[]> {
     }
   }
 
-  // Combine DB & Local reports, deduplicating by caseId (DB prioritized)
   const reportMap = new Map<string, Report>();
-
-  // Start with default mock reports
   MOCK_REPORTS.forEach((r) => reportMap.set(r.caseId, r));
-
-  // Add local storage reports
   localReports.forEach((r) => {
     if (r.caseId && r.anonymousToken) reportMap.set(r.caseId, r);
   });
 
-  // Add DB reports (overwrites mock/local with latest DB state)
-  dbReports.forEach((r) => {
-    if (r.caseId && r.anonymousToken) reportMap.set(r.caseId, r);
-  });
-
-  const allReports = Array.from(reportMap.values()).sort(
+  return Array.from(reportMap.values()).sort(
     (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
   );
-
-  return allReports;
 }
 
 /**
- * 3. Ambil Laporan Tunggal berdasarkan Token Anonim (untuk /track)
+ * 3. Seed data sampel ke Supabase (Bila tabel Supabase masih kosong)
+ */
+export async function seedMockReportsToSupabase(): Promise<{ success: boolean; count: number; error?: string }> {
+  const { url, key, isConfigured } = getSupabaseConfig();
+  if (!isConfigured) return { success: false, count: 0, error: 'Supabase belum dikonfigurasi' };
+
+  try {
+    const rows = MOCK_REPORTS.map(reportToDbRow);
+    const response = await fetch(`${url}/rest/v1/reports`, {
+      method: 'POST',
+      headers: {
+        'apikey': key,
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=ignore-duplicates,return=representation',
+      },
+      body: JSON.stringify(rows),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      return { success: false, count: 0, error: errText };
+    }
+
+    const inserted = await response.json();
+    return { success: true, count: Array.isArray(inserted) ? inserted.length : MOCK_REPORTS.length };
+  } catch (err: any) {
+    return { success: false, count: 0, error: err?.message || 'Error seeding DB' };
+  }
+}
+
+/**
+ * 4. Ambil Laporan Tunggal berdasarkan Token Anonim (untuk /track)
  */
 export async function fetchReportByTokenFromDatabase(token: string): Promise<Report | null> {
   const cleanToken = token.trim().toUpperCase();
@@ -218,7 +238,7 @@ export async function fetchReportByTokenFromDatabase(token: string): Promise<Rep
 }
 
 /**
- * 4. Update Status Kasus, Audit Log, Pesan Chat, atau Berkas Bukti ke Database
+ * 5. Update Status Kasus, Audit Log, Pesan Chat, atau Berkas Bukti ke Database
  */
 export async function updateReportInDatabase(
   caseId: string,

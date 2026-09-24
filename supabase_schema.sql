@@ -1,5 +1,5 @@
 -- ============================================================================
--- AMANKAMPUS SUPABASE DATABASE SCHEMA SETUP
+-- AMANKAMPUS SUPABASE DATABASE SCHEMA SETUP & SEED DATA
 -- Jalankan skrip ini di Supabase Dashboard -> SQL Editor -> Run
 -- ============================================================================
 
@@ -57,3 +57,51 @@ WITH CHECK (true);
 CREATE INDEX IF NOT EXISTS idx_reports_anonymous_token ON public.reports(anonymous_token);
 CREATE INDEX IF NOT EXISTS idx_reports_case_id ON public.reports(case_id);
 CREATE INDEX IF NOT EXISTS idx_reports_received_at ON public.reports(received_at DESC);
+
+-- 4. Sample Seed Data (Opsional: Masukkan data awal jika tabel masih kosong)
+INSERT INTO public.reports (
+    case_id,
+    anonymous_token,
+    category,
+    incident_time,
+    involved_parties,
+    target_faculty,
+    chronology,
+    evidences,
+    messages,
+    audit_logs,
+    status,
+    received_at,
+    is_anonymous
+) VALUES 
+(
+    'CASE-2026-00001',
+    'AK-2026-X9K2P',
+    'Perundungan Verbal & Intimidasi',
+    '2 September 2026, Pukul 14.15 WIB',
+    'Pengurus organisasi mahasiswa (2 orang)',
+    'Fakultas Teknik',
+    'Saya mengalami perundungan verbal dan intimidasi psikologis di lingkungan perpustakaan kampus oleh oknum anggota pengurus organisasi. Pelaku mengancam akan menyebarkan rumor tidak benar jika saya tidak menyerahkan data proyek penelitian kelompok.',
+    '[{"evidenceId": "EVD-1001", "fileName": "bukti_rekaman_percakapan_dan_chat.png", "fileType": "image/png", "fileSize": 450120, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "exifStripped": true, "forensicStatus": "Original", "forensicDetails": ["SHA-256 Checksum: Valid & Utuh", "EXIF GPS Metadata: Stripped"], "reporterNote": "Tangkapan layar berisi ancaman intimidasi.", "verificationStatus": "Terverifikasi Valid"}]'::jsonb,
+    '[{"id": "MSG-101", "sender": "Pelapor", "text": "Halo Tim Satgas PPKS, mohon jaminan privasi.", "timestamp": "2026-09-02T06:30:00.000Z"}]'::jsonb,
+    '[{"id": "AL-101", "action": "Laporan diterima oleh sistem terenkripsi Zero-Knowledge", "actor": "Sistem", "timestamp": "2026-09-02T06:00:00.000Z"}]'::jsonb,
+    'Diproses',
+    '2026-09-02T06:00:00.000Z',
+    true
+),
+(
+    'CASE-2026-00002',
+    'AK-2026-B4M1L',
+    'Pelecehan Seksual Daring (Cyber Harassment)',
+    '31 Agustus 2026, Pukul 22.30 WIB',
+    'Akun media sosial anonim',
+    'Fakultas MIPA',
+    'Menerima pesan tidak pantas dan foto tidak etis secara berulang dari oknum akun anonim melalui media sosial mahasiswa.',
+    '[]'::jsonb,
+    '[]'::jsonb,
+    '[{"id": "AL-201", "action": "Laporan diterima oleh sistem terenkripsi", "actor": "Sistem", "timestamp": "2026-09-01T09:30:00.000Z"}]'::jsonb,
+    'Laporan Diterima',
+    '2026-09-01T09:30:00.000Z',
+    true
+)
+ON CONFLICT (case_id) DO NOTHING;
