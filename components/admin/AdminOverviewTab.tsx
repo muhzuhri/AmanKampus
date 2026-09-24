@@ -1,18 +1,14 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import {
   FileText,
   Clock,
   CheckCircle,
-  AlertTriangle,
   Building2,
   PieChart,
   Inbox,
-  ArrowLeft,
   ChevronRight,
-  ShieldCheck,
 } from 'lucide-react';
 import { type Report, type CaseStatus } from '@/lib/types';
 import { STATUS_STYLES, ALL_STATUSES } from '@/lib/adminUtils';
@@ -30,10 +26,17 @@ export default function AdminOverviewTab({
 }: AdminOverviewTabProps) {
   const safeReports = Array.isArray(reports) ? reports.filter(Boolean) : [];
 
+  // Stat Summary calculation — covers all status types cleanly
   const stats = {
     total: safeReports.length,
     diterima: safeReports.filter((r) => r?.status === 'Laporan Diterima').length,
-    diproses: safeReports.filter((r) => r?.status === 'Diproses' || r?.status === 'Diverifikasi').length,
+    diproses: safeReports.filter(
+      (r) =>
+        r?.status === 'Diproses' ||
+        r?.status === 'Diverifikasi' ||
+        r?.status === 'Mediasi & Konseling' ||
+        r?.status === 'Eskalasi ke Komite Etik'
+    ).length,
     selesai: safeReports.filter((r) => r?.status === 'Selesai').length,
   };
 
@@ -51,13 +54,6 @@ export default function AdminOverviewTab({
     return acc;
   }, {});
 
-  // Faculty/Scope counts
-  const facultyCounts = safeReports.reduce<Record<string, number>>((acc, r) => {
-    const f = r?.targetFaculty || 'Tidak Diberitahukan';
-    acc[f] = (acc[f] || 0) + 1;
-    return acc;
-  }, {});
-
   const recentReports = [...safeReports]
     .sort(
       (a, b) => new Date(b?.receivedAt || 0).getTime() - new Date(a?.receivedAt || 0).getTime()
@@ -70,7 +66,7 @@ export default function AdminOverviewTab({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-[#163432] p-4 rounded-2xl border border-stone-200 dark:border-teal-900 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-stone-500 dark:text-stone-400">Total Kasus</span>
+            <span className="text-xs font-semibold text-stone-600 dark:text-stone-300">Total Kasus</span>
             <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400">
               <FileText className="w-4 h-4" />
             </div>
@@ -81,7 +77,7 @@ export default function AdminOverviewTab({
 
         <div className="bg-white dark:bg-[#163432] p-4 rounded-2xl border border-stone-200 dark:border-teal-900 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">Baru Diterima</span>
+            <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">Baru Diterima</span>
             <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <Inbox className="w-4 h-4" />
             </div>
@@ -92,18 +88,18 @@ export default function AdminOverviewTab({
 
         <div className="bg-white dark:bg-[#163432] p-4 rounded-2xl border border-stone-200 dark:border-teal-900 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400">Sedang Diproses</span>
+            <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">Sedang Diproses</span>
             <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
               <Clock className="w-4 h-4" />
             </div>
           </div>
           <p className="text-2xl font-bold text-stone-900 dark:text-stone-100 mt-2">{stats.diproses}</p>
-          <span className="text-[11px] text-indigo-600 dark:text-indigo-400">Dalam penyelidikan</span>
+          <span className="text-[11px] text-indigo-600 dark:text-indigo-400">Dalam Penyelidikan / Etik</span>
         </div>
 
         <div className="bg-white dark:bg-[#163432] p-4 rounded-2xl border border-stone-200 dark:border-teal-900 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Kasus Selesai</span>
+            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Kasus Selesai</span>
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <CheckCircle className="w-4 h-4" />
             </div>
@@ -138,11 +134,11 @@ export default function AdminOverviewTab({
                 <div key={status} className="space-y-1">
                   <div className="flex justify-between text-xs font-medium text-stone-700 dark:text-stone-300">
                     <span>{status}</span>
-                    <span>{count} kasus ({percent}%)</span>
+                    <span className="font-semibold text-stone-900 dark:text-stone-100">{count} kasus ({percent}%)</span>
                   </div>
-                  <div className="w-full bg-stone-100 dark:bg-stone-800 rounded-full h-4 overflow-hidden">
+                  <div className="w-full bg-stone-100 dark:bg-stone-800 rounded-full h-3.5 overflow-hidden">
                     <div
-                      className="bg-teal-500 h-4 rounded-full transition-all duration-500"
+                      className="bg-teal-500 h-3.5 rounded-full transition-all duration-500"
                       style={{ width: `${percent}%` }}
                     />
                   </div>
@@ -160,23 +156,27 @@ export default function AdminOverviewTab({
           </h3>
 
           <div className="space-y-3">
-            {Object.entries(categoryCounts).map(([cat, count]) => {
-              const percent = reports.length > 0 ? Math.round((count / reports.length) * 100) : 0;
-              return (
-                <div key={cat} className="space-y-1">
-                  <div className="flex justify-between text-xs font-medium text-stone-700 dark:text-stone-300">
-                    <span className="truncate max-w-[240px]">{cat}</span>
-                    <span>{count} kasus ({percent}%)</span>
+            {Object.keys(categoryCounts).length === 0 ? (
+              <p className="text-xs text-stone-400 py-6 text-center">Belum ada data kategori.</p>
+            ) : (
+              Object.entries(categoryCounts).map(([cat, count]) => {
+                const percent = reports.length > 0 ? Math.round((count / reports.length) * 100) : 0;
+                return (
+                  <div key={cat} className="space-y-1">
+                    <div className="flex justify-between text-xs font-medium text-stone-700 dark:text-stone-300">
+                      <span className="truncate max-w-[240px]">{cat}</span>
+                      <span className="font-semibold text-stone-900 dark:text-stone-100">{count} kasus ({percent}%)</span>
+                    </div>
+                    <div className="w-full bg-stone-100 dark:bg-stone-800 rounded-full h-3.5 overflow-hidden">
+                      <div
+                        className="bg-indigo-500 h-3.5 rounded-full transition-all duration-500"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-stone-100 dark:bg-stone-800 rounded-full h-4 overflow-hidden">
-                    <div
-                      className="bg-indigo-500 h-4 rounded-full transition-all duration-500"
-                      style={{ width: `${percent}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>
@@ -197,28 +197,32 @@ export default function AdminOverviewTab({
         </div>
 
         <div className="divide-y divide-stone-100 dark:divide-stone-800">
-          {recentReports.map((r) => (
-            <div
-              key={r.caseId}
-              onClick={() => onSelectReport(r)}
-              className="py-3 flex items-center justify-between gap-4 hover:bg-stone-50 dark:hover:bg-stone-800/50 px-2 rounded-xl transition-colors cursor-pointer"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono font-bold text-xs text-teal-600 dark:text-teal-400">
-                    {r.caseId}
-                  </span>
-                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${STATUS_STYLES[r.status]}`}>
-                    {r.status}
-                  </span>
+          {recentReports.length === 0 ? (
+            <p className="text-xs text-stone-400 py-4 text-center">Tidak ada laporan.</p>
+          ) : (
+            recentReports.map((r) => (
+              <div
+                key={r.caseId}
+                onClick={() => onSelectReport(r)}
+                className="py-3 flex items-center justify-between gap-4 hover:bg-stone-50 dark:hover:bg-stone-800/50 px-2 rounded-xl transition-colors cursor-pointer"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono font-bold text-xs text-teal-600 dark:text-teal-400">
+                      {r.caseId}
+                    </span>
+                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${STATUS_STYLES[r.status] || ''}`}>
+                      {r.status}
+                    </span>
+                  </div>
+                  <p className="text-xs font-semibold text-stone-800 dark:text-stone-200 mt-1 truncate">
+                    {r.category}
+                  </p>
                 </div>
-                <p className="text-xs font-semibold text-stone-800 dark:text-stone-200 mt-1 truncate">
-                  {r.category}
-                </p>
+                <ChevronRight className="w-4 h-4 text-stone-400 shrink-0" />
               </div>
-              <ChevronRight className="w-4 h-4 text-stone-400 shrink-0" />
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

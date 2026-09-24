@@ -5,19 +5,8 @@ import {
   Search,
   Filter,
   Eye,
-  Paperclip,
-  CheckCircle,
-  ShieldCheck,
-  AlertTriangle,
-  Download,
-  Check,
-  XCircle,
   Inbox,
-  Clock,
-  Sparkles,
-  FileText,
   Trash2,
-  X,
 } from "lucide-react";
 import {
   type Report,
@@ -91,31 +80,33 @@ export default function AdminInboxTab({
             />
           </div>
 
-          {/* Status Filter */}
+          {/* Status Filter Dropdown */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-teal-900 rounded-xl px-3 py-2 text-xs font-semibold text-stone-700 dark:text-stone-200 outline-none cursor-pointer truncate"
+            className="w-full bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-teal-900 rounded-xl px-3 py-2 text-xs font-semibold text-stone-900 dark:text-stone-100 outline-none cursor-pointer truncate"
           >
-            <option value="Semua Status">
+            <option value="Semua Status" className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 font-semibold">
               Semua Status ({reports.length})
             </option>
             {ALL_STATUSES.map((st) => (
-              <option key={st} value={st}>
+              <option key={st} value={st} className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 font-semibold">
                 {st}
               </option>
             ))}
           </select>
 
-          {/* Category Filter */}
+          {/* Category Filter Dropdown */}
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="w-full bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-teal-900 rounded-xl px-3 py-2 text-xs font-semibold text-stone-700 dark:text-stone-200 outline-none cursor-pointer truncate"
+            className="w-full bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-teal-900 rounded-xl px-3 py-2 text-xs font-semibold text-stone-900 dark:text-stone-100 outline-none cursor-pointer truncate"
           >
-            <option value="Semua Kategori">Semua Kategori</option>
+            <option value="Semua Kategori" className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 font-semibold">
+              Semua Kategori
+            </option>
             {allCategories.map((cat) => (
-              <option key={cat} value={cat}>
+              <option key={cat} value={cat} className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 font-semibold">
                 {cat}
               </option>
             ))}
@@ -209,12 +200,16 @@ export default function AdminInboxTab({
                     onChange={(e) =>
                       onUpdateStatus(report, e.target.value as CaseStatus)
                     }
-                    className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border outline-none cursor-pointer max-w-[160px] ${
+                    className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg border outline-none cursor-pointer max-w-[160px] ${
                       STATUS_STYLES[report.status] || ""
                     }`}
                   >
                     {ALL_STATUSES.map((st) => (
-                      <option key={st} value={st}>
+                      <option
+                        key={st}
+                        value={st}
+                        className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 font-semibold"
+                      >
                         {st}
                       </option>
                     ))}
@@ -243,7 +238,7 @@ export default function AdminInboxTab({
                   <button
                     type="button"
                     onClick={() => setReportToDelete(report)}
-                    className="flex-1 py-2 px-3 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 border border-red-200/80 dark:border-red-900/80 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="flex-1 py-2 px-3 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-900/70 text-red-600 dark:text-red-300 border border-red-200 dark:border-red-900 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Hapus</span>
@@ -308,10 +303,14 @@ export default function AdminInboxTab({
                           onChange={(e) =>
                             onUpdateStatus(report, e.target.value as CaseStatus)
                           }
-                          className={`text-xs font-bold px-2.5 py-1 rounded-lg border outline-none cursor-pointer ${STATUS_STYLES[report.status] || ""}`}
+                          className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border outline-none cursor-pointer ${STATUS_STYLES[report.status] || ""}`}
                         >
                           {ALL_STATUSES.map((st) => (
-                            <option key={st} value={st}>
+                            <option
+                              key={st}
+                              value={st}
+                              className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 font-semibold"
+                            >
                               {st}
                             </option>
                           ))}

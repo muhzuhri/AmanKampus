@@ -23,14 +23,14 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// Status Styles — fully adaptive for light & dark mode
+// Status Styles — fully adaptive high-contrast styling for light & dark mode
 export const STATUS_STYLES: Record<CaseStatus, string> = {
-  'Laporan Diterima': 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30',
-  Diverifikasi:       'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30',
-  Diproses:           'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/30',
-  'Mediasi & Konseling': 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/30',
-  'Eskalasi ke Komite Etik': 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30',
-  Selesai:            'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30',
+  'Laporan Diterima': 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/90 dark:text-amber-300 dark:border-amber-700/80 font-bold',
+  Diverifikasi:       'bg-blue-100 text-blue-900 border-blue-300 dark:bg-blue-950/90 dark:text-blue-300 dark:border-blue-700/80 font-bold',
+  Diproses:           'bg-indigo-100 text-indigo-900 border-indigo-300 dark:bg-indigo-950/90 dark:text-indigo-300 dark:border-indigo-700/80 font-bold',
+  'Mediasi & Konseling': 'bg-teal-100 text-teal-900 border-teal-300 dark:bg-teal-950/90 dark:text-teal-300 dark:border-teal-700/80 font-bold',
+  'Eskalasi ke Komite Etik': 'bg-rose-100 text-rose-900 border-rose-300 dark:bg-rose-950/90 dark:text-rose-300 dark:border-rose-700/80 font-bold',
+  Selesai:            'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/90 dark:text-emerald-300 dark:border-emerald-700/80 font-bold',
 };
 
 export const ALL_STATUSES: CaseStatus[] = [
@@ -75,7 +75,6 @@ export function exportReportsToCSV(reportsList: Report[]) {
 }
 
 export function handleDownloadEvidence(ev: Evidence) {
-  // 1. Direct DataURL download (for all user uploads)
   if (ev.dataUrl && ev.dataUrl.startsWith('data:')) {
     const a = document.createElement('a');
     a.href = ev.dataUrl;
@@ -86,21 +85,17 @@ export function handleDownloadEvidence(ev: Evidence) {
     return;
   }
 
-  // 2. Fallback Image Blob Generator for Mock/Legacy Files: Generate a clean PNG image file!
   const canvas = document.createElement('canvas');
   canvas.width = 1200;
   canvas.height = 700;
   const ctx = canvas.getContext('2d');
   if (ctx) {
-    // Dark background
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Header accent bar
     ctx.fillStyle = '#0d9488';
     ctx.fillRect(0, 0, canvas.width, 16);
 
-    // Title & Header
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 36px sans-serif';
     ctx.fillText('AMANKAMPUS — BERKAS BUKTI ASLI PELAPOR', 60, 80);
@@ -110,7 +105,6 @@ export function handleDownloadEvidence(ev: Evidence) {
     ctx.fillText(`Nama Berkas: ${ev.fileName}`, 60, 130);
     ctx.fillText(`ID Bukti: ${ev.evidenceId} | SHA-256 Checksum Secured`, 60, 165);
 
-    // Image Placeholder Box
     ctx.fillStyle = '#1e293b';
     ctx.strokeStyle = '#334155';
     ctx.lineWidth = 3;
@@ -135,7 +129,6 @@ export function handleDownloadEvidence(ev: Evidence) {
       ctx.fillText(`Catatan Pelapor : ${ev.reporterNote}`, 100, 440);
     }
 
-    // Footer badge
     ctx.fillStyle = '#64748b';
     ctx.font = '18px sans-serif';
     ctx.fillText('Dokumen resmi terenkripsi Satgas PPKS AmanKampus.', 60, 630);

@@ -81,6 +81,23 @@ function reportToDbRow(report: Report) {
 }
 
 /**
+ * Helper: Ambil daftar ID kasus yang telah dihapus admin (agar tidak muncul lagi walau mock data terload)
+ */
+export function getDeletedCaseIds(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const deletedStr = localStorage.getItem('aman_kampus_deleted_case_ids');
+    if (deletedStr) {
+      const parsed = JSON.parse(deletedStr);
+      if (Array.isArray(parsed)) return new Set(parsed);
+    }
+  } catch {
+    // ignore
+  }
+  return new Set();
+}
+
+/**
  * Helper: Ambil laporan lokal dari LocalStorage.
  * Hanya memuat MOCK_REPORTS jika includeMocks === true (misal saat offline/fallback).
  */
@@ -98,12 +115,17 @@ export function getLocalReports(includeMocks: boolean = false): Report[] {
     }
   }
 
+  const deletedIds = getDeletedCaseIds();
   const reportMap = new Map<string, Report>();
   if (includeMocks) {
-    MOCK_REPORTS.forEach((r) => reportMap.set(r.caseId, r));
+    MOCK_REPORTS.forEach((r) => {
+      if (!deletedIds.has(r.caseId)) reportMap.set(r.caseId, r);
+    });
   }
   localReports.forEach((r) => {
-    if (r.caseId && r.anonymousToken) reportMap.set(r.caseId, r);
+    if (r.caseId && r.anonymousToken && !deletedIds.has(r.caseId)) {
+      reportMap.set(r.caseId, r);
+    }
   });
 
   return Array.from(reportMap.values()).sort(
@@ -238,7 +260,9 @@ export async function fetchReportsWithStatus(): Promise<{
     }
 
     const rows = await response.json();
-    const reports = Array.isArray(rows) ? rows.map(dbRowToReport) : [];
+    const deletedIds = getDeletedCaseIds();
+    const rawReports = Array.isArray(rows) ? rows.map(dbRowToReport) : [];
+    const reports = rawReports.filter((r) => !deletedIds.has(r.caseId));
     return {
       reports,
       status: {
@@ -467,9 +491,16 @@ export async function updateReportInDatabase(
 export async function deleteReportFromDatabase(
   caseId: string
 ): Promise<{ success: boolean; error?: string }> {
-  // Hapus dari localStorage terlebih dahulu
+  // Always blacklist caseId in localStorage so it never reappears on reload
   if (typeof window !== 'undefined') {
     try {
+      const deletedStr = localStorage.getItem('aman_kampus_deleted_case_ids');
+      const deletedList: string[] = deletedStr ? JSON.parse(deletedStr) : [];
+      if (!deletedList.includes(caseId)) {
+        deletedList.push(caseId);
+        localStorage.setItem('aman_kampus_deleted_case_ids', JSON.stringify(deletedList));
+      }
+
       const savedStr = localStorage.getItem('aman_kampus_reports');
       if (savedStr) {
         const reports: Report[] = JSON.parse(savedStr);
@@ -493,7 +524,7 @@ export async function deleteReportFromDatabase(
         method: 'DELETE',
         headers: {
           ...supabaseHeaders(key),
-          'Prefer': 'return=minimal',
+          'Prefer': 'return=representation',
         },
       },
       6000
@@ -501,7 +532,7 @@ export async function deleteReportFromDatabase(
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('Gagal menghapus dari Supabase:', errText);
+      console.error('Gagal menghapus dari Supabase REST API:', errText);
       return { success: false, error: errText };
     }
 
